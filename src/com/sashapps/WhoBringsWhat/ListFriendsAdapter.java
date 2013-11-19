@@ -24,6 +24,7 @@ public class ListFriendsAdapter extends BaseAdapter {
     public ListFriendsAdapter(Activity a, ArrayList<FacebookFriend> map){
 
         activity = a;
+
         data=map;
         inflater = (LayoutInflater)activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         arePhotosReady=false;
