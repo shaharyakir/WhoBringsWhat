@@ -1,9 +1,11 @@
 package com.sashapps.WhoBringsWhat;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
@@ -46,23 +48,21 @@ public class MyActivity extends Activity {
         // Parse init
         Parse.initialize(this, "36GvVowfQyFvW5XhZL7P05xB0pPciF9e3VSq4Qf4", "cu0pbNtOJoLczixm575YUdJBbzWH3eNMnMm7EThk");
         ParseAnalytics.trackAppOpened(getIntent());
+*/
 
-        // TEMP code for list
-        HashMap<Integer,Item> map = new HashMap<Integer, Item>();
-        map.put(Utils.generateNumber(),new Item("Burgers"));
-        map.put(Utils.generateNumber(),new Item("Knives"));
-        map.put(Utils.generateNumber(),new Item("Ketchup"));
-        map.put(Utils.generateNumber(),new Item("Buns"));
-
-        // List init
-        ListView list =  (ListView)findViewById(R.id.list);
-        ListAdapter adapter = new ListAdapter(this,map);
-        list.setAdapter(adapter);
-        list.setOnItemClickListener(listListener);*/
+        ListView list = (ListView) findViewById(R.id.list_friends);
+        list.setOnItemClickListener(listFriendsListener);
 
         // Load the facebook friends
         startFacebookLogin();
     }
+
+    ListView.OnItemClickListener listFriendsListener = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            view.setBackgroundColor(Color.YELLOW);
+        }
+    };
 
     private class loadFaceBookFriends extends AsyncTask<Void,Void,ArrayList<FacebookFriend>>{
 
@@ -80,7 +80,7 @@ public class MyActivity extends Activity {
                 // get friends
                 String fqlQuery = "SELECT uid,name " +
                         "FROM user " +
-                        "WHERE uid in (SELECT uid2 FROM friend WHERE uid1=me() LIMIT 25)";
+                        "WHERE uid in (SELECT uid2 FROM friend WHERE uid1=me() LIMIT 44)";
                 Bundle params = new Bundle();
                 params.putString("q", fqlQuery);
                 Request req = new Request(Session.getActiveSession(), "/fql", params, HttpMethod.GET);
@@ -193,6 +193,7 @@ public class MyActivity extends Activity {
     };
 
     private void startFacebookLogin(){
+        Log.d(TAG,"Facebook session : trying to open");
 
         Session.openActiveSession(this, true, new Session.StatusCallback() {
 
@@ -202,6 +203,7 @@ public class MyActivity extends Activity {
             public void call(Session session, SessionState state, Exception exception) {
                 if (session.isOpened()) {
 
+                    Log.d(TAG,"Facebook session opened");
                     // make request to the /me API
                     Request.executeMeRequestAsync(session, new Request.GraphUserCallback() {
                         // callback after Graph API response with user object

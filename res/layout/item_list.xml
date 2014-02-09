@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:orientation="horizontal"
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content"
+              android:layout_margin="8dp"
+              android:padding="8dp"
+              android:background="@drawable/back"
+              >
+
+
+        <ImageView
+                android:id="@+id/profilepic"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/com_facebook_profile_default_icon"
+                android:layout_marginRight="8dp"
+                android:layout_weight="0"/>
+
+    <TextView android:id="@+id/title"
+              android:layout_width="0dp"
+              android:layout_height="wrap_content"
+              android:textSize="18sp"
+              android:textStyle="normal"
+              android:fontFamily="sans-serif-condensed"
+              android:text="Burgers"
+              android:layout_gravity="center"
+              android:layout_weight="1"/>
+
+        <TextView android:id="@+id/quantity"
+              android:layout_width="0dp"
+              android:layout_height="wrap_content"
+              android:textSize="24sp"
+              android:textStyle="bold"
+              android:fontFamily="sans-serif-condensed"
+              android:layout_gravity="center"
+              android:text="20"
+              android:layout_weight="1"
+              android:gravity="right"/>
+</LinearLayout>

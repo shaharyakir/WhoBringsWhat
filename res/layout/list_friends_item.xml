@@ -45,6 +45,7 @@
                     android:layout_width="32dp"
                     android:layout_height="32dp"
                     android:layout_gravity="center"
+                    android:src="@drawable/com_facebook_profile_default_icon"
                     android:id="@+id/list_friends_profile_pic"
                     />
 
