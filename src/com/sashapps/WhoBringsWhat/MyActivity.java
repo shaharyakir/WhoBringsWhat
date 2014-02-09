@@ -193,7 +193,7 @@ public class MyActivity extends Activity {
     };
 
     private void startFacebookLogin(){
-        Log.d(TAG,"Facebook session : trying to open");
+        Log.d(TAG,"Facebook session ");
 
         Session.openActiveSession(this, true, new Session.StatusCallback() {
 

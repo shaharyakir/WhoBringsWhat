@@ -18,4 +18,12 @@
               android:visibility="gone"
             />
 
+    <TextView
+            android:id="@+id/add_item"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Add Item"
+            android:fontFamily="sans_serif-condensed"
+            />
+
 </LinearLayout>

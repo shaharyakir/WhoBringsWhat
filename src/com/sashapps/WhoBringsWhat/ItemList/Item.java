@@ -28,22 +28,20 @@ public class Item extends ParseObject {
         return getString("category");
     }
 
-    public void setCategory(String category) {
+    public void setCategory(Category category) {
         put("category",category);
     }
-
 
     public Boolean isRegistered() {
         return getBoolean("isRegistered");
     }
 
-
     public Bitmap getPhoto() {
         return mPhoto;
     }
 
-    public void register(Bitmap photo) {
-        this.mPhoto = photo;
+    public void register() {
+        this.mPhoto = Utils.getFacebookPhoto();
         this.setIsRegistered(true);
         this.saveInBackground();
     }
@@ -59,7 +57,9 @@ public class Item extends ParseObject {
     }
 
     public Integer getQuantity() {
-        return getInt("quantity");
+        Integer i = getInt("quantity");
+        if (i==0) { return null; }
+        else { return i; }
     }
 
     public void setQuantity(Integer quantity) {
@@ -81,10 +81,20 @@ public class Item extends ParseObject {
     }
 
     public void setDescription(String description) {
-        put("description", description);
+        if (description != null)
+            put("description", description);
     }
 
-    public Item(ItemList list, String category,String title, String description, Integer quantity) {
+    public void setPhoto(Bitmap b){
+        mPhoto = b;
+    }
+
+    public void deleteItem(){
+        put("state",Utils.PARSE_DELETED);
+        saveInBackground();
+    }
+
+    public Item(ItemList list, Category category,String title, String description, Integer quantity) {
         this.setItemList(list);
         this.setCategory(category);
         this.setTitle(title);
@@ -92,15 +102,10 @@ public class Item extends ParseObject {
         this.setQuantity(quantity);
         this.setIsRegistered(false);
         mPhoto = Utils.getDefaultPhoto();
+        saveInBackground();
     }
 
     public Item() {
-
-        Log.d(Utils.LOG_TAG, "x");
-
-        //if (!this.isRegistered()) {
-            mPhoto = Utils.getDefaultPhoto();
-        //}
-
+        mPhoto = Utils.getDefaultPhoto();
     }
 }

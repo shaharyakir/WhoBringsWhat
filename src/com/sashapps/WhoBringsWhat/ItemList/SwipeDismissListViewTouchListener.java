@@ -19,6 +19,7 @@ package com.sashapps.WhoBringsWhat.ItemList;
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.os.SystemClock;
 import android.view.*;

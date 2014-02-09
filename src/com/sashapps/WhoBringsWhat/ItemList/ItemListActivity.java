@@ -43,7 +43,29 @@ public class ItemListActivity extends Activity {
         /* Init App */
         Utils.setDefaultPhoto(BitmapFactory.decodeResource(getResources(), R.drawable.com_facebook_profile_default_icon));
         initParse();
+        startFacebookLogin();
 
+        findViewById(R.id.add_item).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ParseQuery<Category> catQuery = ParseQuery.getQuery(Category.class);
+                catQuery.whereEqualTo("title","New Category");
+                try {
+                    Item i = new Item(Utils.getItemList(),catQuery.getFirst(),"New Item",null,null);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        });
+    }
+
+    private void initList(){
+
+        adapter = new SepListAdapter(this);
+        ListView listView = (ListView) findViewById(R.id.list_item);
+
+        // Get ItemList
         ParseQuery<ItemList> query = ParseQuery.getQuery(ItemList.class);
         try {
             Utils.setItemList(query.find().get(0));
@@ -51,32 +73,39 @@ public class ItemListActivity extends Activity {
             e.printStackTrace();
         }
 
-        /* Init list */
-        adapter = new SepListAdapter(this);
-
-        ListView listView = (ListView) findViewById(R.id.list_item);
-
-        ParseQuery<Item> itemQuery = ParseQuery.getQuery(Item.class);
-        itemQuery.orderByDescending("category");
-        List<Item> list = null;
+        List<Category> categoryList =null;
+        // Get Categories
+        ParseQuery<Category> catQuery = ParseQuery.getQuery(Category.class);
         try {
-            list = itemQuery.find();
+            categoryList=catQuery.find();
         } catch (ParseException e) {
             e.printStackTrace();
         }
 
-        String prevCategory = "";
 
-        Boolean isFirst=true;
+        for (Category c : categoryList){
+            ParseQuery<Item> itemQuery = ParseQuery.getQuery(Item.class);
 
-        ArrayList<Item> temp = new ArrayList<Item>(list);
+            itemQuery.whereEqualTo("category",c);
+            itemQuery.whereNotEqualTo("state",Utils.PARSE_DELETED);
 
+            List<Item> list = null;
+            try {
+                list = itemQuery.find();
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
 
-        for (Item i:temp){
-            Log.d(Utils.LOG_TAG,i.toString());
+            ArrayList<Item> temp = new ArrayList<Item>(list);
+
+            for (Item i:temp){
+                if (i.isRegistered()){
+                    i.setPhoto(Utils.getFacebookPhoto());
+                }
+            }
+
+            adapter.addSection(c.getTitle(), new ItemListAdapter(this, temp));
         }
-
-        adapter.addSection("Food", new ItemListAdapter(this, temp));
 
 
         SwipeDismissListViewTouchListener swipeListener = new SwipeDismissListViewTouchListener(listView,
@@ -90,6 +119,7 @@ public class ItemListActivity extends Activity {
                     public void onDismiss(ListView listView, int[] reverseSortedPositions) {
                                 /*Toast.makeText(getBaseContext(),"Item removed",Toast.LENGTH_SHORT).show();*/
                         for (int position : reverseSortedPositions) {
+                            ((Item)adapter.getItem(position)).deleteItem();
                             adapter.remove(position);
                         }
                         adapter.notifyDataSetChanged();
@@ -100,7 +130,7 @@ public class ItemListActivity extends Activity {
         listView.setOnTouchListener(swipeListener);
         listView.setOnScrollListener(swipeListener.makeScrollListener()); // Setting this scroll listener is required to ensure that during ListView scrolling, we don't look for swipes.
 
-        startFacebookLogin();
+
 
         AdapterView.OnItemClickListener x = new AdapterView.OnItemClickListener() {
             @Override
@@ -109,7 +139,7 @@ public class ItemListActivity extends Activity {
                     Item i = (Item) adapter.getItem(position);
 
                     if (!i.isRegistered()) {
-                        i.register(facebookPhoto);
+                        i.register();
                     } else {
                         i.unregister();
                     }
@@ -120,11 +150,13 @@ public class ItemListActivity extends Activity {
 
         listView.setOnItemClickListener(x);
 
+        findViewById(R.id.list_item).setVisibility(View.VISIBLE);
     }
 
     private void initParse() {
         ParseObject.registerSubclass(ItemList.class);
         ParseObject.registerSubclass(Item.class);
+        ParseObject.registerSubclass(Category.class);
 
         Parse.initialize(this, "36GvVowfQyFvW5XhZL7P05xB0pPciF9e3VSq4Qf4", "cu0pbNtOJoLczixm575YUdJBbzWH3eNMnMm7EThk");
         ParseAnalytics.trackAppOpened(getIntent());
@@ -185,8 +217,8 @@ public class ItemListActivity extends Activity {
 
         @Override
         protected void onPostExecute(Bitmap b) {
-            facebookPhoto = b;
-            findViewById(R.id.list_item).setVisibility(View.VISIBLE);
+            Utils.setFacebookPhoto(b);
+            initList();
         }
 
 

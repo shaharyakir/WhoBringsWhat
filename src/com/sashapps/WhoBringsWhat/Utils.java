@@ -11,6 +11,8 @@ import java.util.ArrayList;
 
 public class Utils {
 
+    public static int PARSE_DELETED=3;
+
     private static int num=0;
 
     private static ItemList theItemList;
@@ -28,6 +30,16 @@ public class Utils {
     }
 
     private static Bitmap defaultPhoto;
+
+    public static Bitmap getFacebookPhoto() {
+        return facebookPhoto;
+    }
+
+    public static void setFacebookPhoto(Bitmap facebookPhoto) {
+        Utils.facebookPhoto = facebookPhoto;
+    }
+
+    private static Bitmap facebookPhoto;
 
 
     public static String GOAL_SERIALIZABLE_OBJECT = "GOAL";
