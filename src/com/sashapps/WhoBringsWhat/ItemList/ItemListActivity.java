@@ -19,6 +19,7 @@ import com.parse.*;
 import com.sashapps.WhoBringsWhat.ItemList.Row.RowType;
 import com.sashapps.WhoBringsWhat.ToDelete.OLDItemListAdapter;
 import com.sashapps.WhoBringsWhat.View.Utils.SwipeDismissListViewTouchListener;
+import com.sashapps.WhoBringsWhat.WBWApplication;
 import com.sashapps.WhoBringsWhat.WBWBaseActivity;
 import com.sashapps.WhoBringsWhat.R;
 import com.sashapps.WhoBringsWhat.Utils;
@@ -38,14 +39,18 @@ public class ItemListActivity extends WBWBaseActivity {
     ListView listView;
     Bitmap facebookPhoto;
     Bitmap defaultPhoto;
+    ListHandlers listHandlers;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.item_list_activity);
+
         Log.d(getWBWApplication().LOG_TAG, "Started");
         /* Init App */
         Utils.setDefaultPhoto(BitmapFactory.decodeResource(getResources(), R.drawable.com_facebook_profile_default_icon));
-        initParse();
+        getWBWApplication().initParse();
+        ParseAnalytics.trackAppOpened(getIntent());
+        findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
         startFacebookLogin();
 
         findViewById(R.id.add_item).setOnClickListener(new View.OnClickListener() {
@@ -56,7 +61,7 @@ public class ItemListActivity extends WBWBaseActivity {
                 try {
                     Category c = catQuery.getFirst();
                     Item i = new Item(Utils.getItemList(), c, "New Item", null, null);
-                    adapter.addItem(i); //TODO: FIX
+                    adapter.addItem(i);
                     adapter.notifyDataSetChanged();
                 } catch (ParseException e) {
                     e.printStackTrace();
@@ -66,20 +71,15 @@ public class ItemListActivity extends WBWBaseActivity {
         });
     }
 
-    private void initList() {
-        ListView listView = (ListView) findViewById(R.id.list_item);
-        findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
+    private class ListHandlers {
 
-        listView.setAdapter(adapter);
+        private ListView lv;
 
-        Log.d(getWBWApplication().LOG_TAG, "InitList");
+        ListHandlers(ListView lv) {
+            this.lv = lv;
+        }
 
-        findViewById(R.id.progressBar).setVisibility(View.GONE);
-
-        getItemList();
-
-
-        AdapterView.OnItemClickListener x = new AdapterView.OnItemClickListener() {
+        private AdapterView.OnItemClickListener onItemClickListener = new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 if (adapter.getItemViewType(position) == RowType.ITEM.ordinal()) {
@@ -95,7 +95,21 @@ public class ItemListActivity extends WBWBaseActivity {
             }
         };
 
-        listView.setOnItemClickListener(x);
+
+    }
+
+    private void initList() {
+
+        ListView listView = (ListView) findViewById(R.id.list_item);
+
+        listHandlers = new ListHandlers(listView);
+
+
+        listView.setAdapter(adapter);
+
+        Log.d(getWBWApplication().LOG_TAG, "InitList");
+
+        listView.setOnItemClickListener(listHandlers.onItemClickListener);
 
         SwipeDismissListViewTouchListener swipeListener = new SwipeDismissListViewTouchListener(listView,
                 new SwipeDismissListViewTouchListener.DismissCallbacks() {
@@ -106,7 +120,6 @@ public class ItemListActivity extends WBWBaseActivity {
 
                     @Override
                     public void onDismiss(ListView listView, int[] reverseSortedPositions) {
-                                /*Toast.makeText(getBaseContext(),"Item removed",Toast.LENGTH_SHORT).show();*/
                         for (int position : reverseSortedPositions) {
                             ((Item) adapter.getItem(position)).deleteItem();
                             adapter.remove(position);
@@ -114,13 +127,20 @@ public class ItemListActivity extends WBWBaseActivity {
                         adapter.notifyDataSetChanged();
                     }
                 });
+
         listView.setOnTouchListener(swipeListener);
         listView.setOnScrollListener(swipeListener.makeScrollListener()); // Setting this scroll listener is required to ensure that during ListView scrolling, we don't look for swipes.
+
+
+        getItemList();
+
     }
 
     private void getItemList() {
         // Get ItemList
         ParseQuery<ItemList> query = ParseQuery.getQuery(ItemList.class);
+        query.setCachePolicy(ParseQuery.CachePolicy.CACHE_ELSE_NETWORK);
+        Log.d(getWBWApplication().LOG_TAG, " query.hasCachedResult(): " + query.hasCachedResult());
         query.findInBackground(new FindCallback<ItemList>() {
             @Override
             public void done(List<ItemList> itemLists, ParseException e) {
@@ -131,11 +151,14 @@ public class ItemListActivity extends WBWBaseActivity {
         });
     }
 
+    ArrayList<Category> categoryList;
+
     private void getCategoryList() {
-        List<Category> categoryList = null;
         // Get Categories
         ParseQuery<Category> catQuery = ParseQuery.getQuery(Category.class);
         catQuery.orderByAscending("position");
+        catQuery.setCachePolicy(ParseQuery.CachePolicy.CACHE_ELSE_NETWORK);
+        Log.d(getWBWApplication().LOG_TAG, " catQuery.hasCachedResult(): " + catQuery.hasCachedResult());
         catQuery.findInBackground(new FindCallback<Category>() {
             @Override
             public void done(List<Category> categories, ParseException e) {
@@ -144,71 +167,114 @@ public class ItemListActivity extends WBWBaseActivity {
                     adapter.notifyDataSetChanged();
                 }*/
                 Log.d(getWBWApplication().LOG_TAG, "Fetched categories");
+                categoryList = (ArrayList<Category>)categories;
                 getItems(categories);
             }
         });
     }
 
+    int asyncNumberOfCallbacks;
+    int asyncCount;
+    ArrayList<Item> arrItems;
+
     private void getItems(final List<Category> catList) {
-        final ListView listView = (ListView) findViewById(R.id.list_item);
 
-        ParseQuery<Item> itemQuery = ParseQuery.getQuery(Item.class);
-        itemQuery.whereNotEqualTo("state", Utils.PARSE_DELETED);
-        itemQuery.findInBackground(new FindCallback<Item>() {
-            @Override
-            public void done(List<Item> items, ParseException e) {
-                Log.d(getWBWApplication().LOG_TAG, "Fetched items");
-                ArrayList<Item> itemsArrList = (ArrayList<Item>) items;
-                for (Item item : itemsArrList) {
-                    if (item.isRegistered()) {
-                        item.setPhoto(Utils.getFacebookPhoto());
 
-                    }
-                    try {
-                        item.getCategory().fetchIfNeeded(); //TODO: FIX!
-                    } catch (ParseException e1) {
-                        e1.printStackTrace();
-                    }
-                }
+        asyncNumberOfCallbacks=catList.size();
+        asyncCount=0;
+        arrItems = new ArrayList<Item>();
 
-                Log.d(getWBWApplication().LOG_TAG, "Processed items");
-                findViewById(R.id.progressBar).setVisibility(View.GONE);
-                adapter = new ItemListAdapter(ItemListActivity.this, itemsArrList, (ArrayList<Category>) catList);
-                listView.setAdapter(adapter);
-            }
-        });
+
+
+        for (Category category : catList) {
+
+            ParseQuery<Item> itemQuery = ParseQuery.getQuery(Item.class);
+            itemQuery.include("category");
+            itemQuery.whereNotEqualTo("state", Utils.PARSE_DELETED);
+            itemQuery.whereEqualTo("category", category);
+            itemQuery.setCachePolicy(ParseQuery.CachePolicy.NETWORK_ELSE_CACHE);
+            Log.d(getWBWApplication().LOG_TAG, " itemQuery.hasCachedResult(): " + itemQuery.hasCachedResult());
+            itemQuery.findInBackground(getItemsCallback);
+        }
+
+
     }
 
-    private void initParse() {
-        ParseObject.registerSubclass(ItemList.class);
-        ParseObject.registerSubclass(Item.class);
-        ParseObject.registerSubclass(Category.class);
+    private FindCallback<Item> getItemsCallback = new FindCallback<Item>() {
+        @Override
+        public void done(List<Item> items, ParseException e) {
+            arrItems.addAll(items);
+            asyncCount++;
+            Log.d(getWBWApplication().LOG_TAG, "Fetched items:" + asyncCount);
+            if (asyncCount==asyncNumberOfCallbacks){
+                doneLoadingItems();
+            }
+        }
+    };
 
-        Parse.initialize(this, "36GvVowfQyFvW5XhZL7P05xB0pPciF9e3VSq4Qf4", "cu0pbNtOJoLczixm575YUdJBbzWH3eNMnMm7EThk");
-        ParseAnalytics.trackAppOpened(getIntent());
+    private void doneLoadingItems(){
+        final ListView listView = (ListView) findViewById(R.id.list_item);
+        Log.d(getWBWApplication().LOG_TAG, "Fetched all items");
+
+
+        for (Item item : arrItems) {
+            if (item.isRegistered()) {
+                item.setPhoto(Utils.getFacebookPhoto());
+            }
+        }
+
+        Log.d(getWBWApplication().LOG_TAG, "Processed items");
+        findViewById(R.id.progressBar).setVisibility(View.GONE);
+        adapter = new ItemListAdapter(ItemListActivity.this, arrItems, (ArrayList<Category>) categoryList);
+        listView.setAdapter(adapter);
     }
 
 
     private void startFacebookLogin() {
-        Session.openActiveSession(this, true, new Session.StatusCallback() {
-            // callback when session changes state
-            @Override
-            public void call(Session session, SessionState state, Exception exception) {
-                if (session.isOpened()) {
-                    // make request to the /me API
-                    Request.executeMeRequestAsync(session, new Request.GraphUserCallback() {
-                        // callback after Graph API response with user object
-                        @Override
-                        public void onCompleted(GraphUser user, Response response) {
-                            if (user != null) {
-                                Utils.setUserFacebookId(user.getId());
-                                new loadUserPhoto(ItemListActivity.this).execute();
-                            }
-                        }
-                    });
+
+        Log.d(getWBWApplication().LOG_TAG, "Started FB Login");
+
+        Session fbSession = Session.openActiveSessionFromCache(this);
+
+        if (fbSession != null && fbSession.isOpened()) {
+
+            Request.newMeRequest(fbSession, new Request.GraphUserCallback() {
+
+                // callback after Graph API response with user object
+                @Override
+                public void onCompleted(GraphUser user, Response response) {
+                    Log.d(getWBWApplication().LOG_TAG, "Cached Done");
+                    if (user != null) {
+                        Utils.setUserFacebookId(user.getId());
+                        new loadUserPhoto(ItemListActivity.this).execute();
+                    }
                 }
-            }
-        });
+            }).executeAsync();
+
+        } else {
+
+            Session.openActiveSession(this, true, new Session.StatusCallback() {
+                // callback when session changes state
+                @Override
+                public void call(Session session, SessionState state, Exception exception) {
+                    if (session.isOpened()) {
+                        // make request to the /me API
+
+                        Request.executeMeRequestAsync(session, new Request.GraphUserCallback() {
+                            // callback after Graph API response with user object
+                            @Override
+                            public void onCompleted(GraphUser user, Response response) {
+                                Log.d(getWBWApplication().LOG_TAG, "Not cached Done");
+                                if (user != null) {
+                                    Utils.setUserFacebookId(user.getId());
+                                    new loadUserPhoto(ItemListActivity.this).execute();
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+        }
 
     }
 
@@ -219,6 +285,7 @@ public class ItemListActivity extends WBWBaseActivity {
 
         loadUserPhoto(Activity a) {
             this.a = a;
+            Log.d(getWBWApplication().LOG_TAG, "Start load photo");
         }
 
         @Override
@@ -244,6 +311,7 @@ public class ItemListActivity extends WBWBaseActivity {
         @Override
         protected void onPostExecute(Bitmap b) {
             Utils.setFacebookPhoto(b);
+            Log.d(getWBWApplication().LOG_TAG, "Done load photo");
             initList();
         }
 
