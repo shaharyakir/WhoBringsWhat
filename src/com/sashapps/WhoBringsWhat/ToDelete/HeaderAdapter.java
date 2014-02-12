@@ -1,4 +1,4 @@
-package com.sashapps.WhoBringsWhat.ItemList;
+package com.sashapps.WhoBringsWhat.ToDelete;
 
 /**
  * Created by shahar on 2/9/14.
@@ -54,7 +54,8 @@ public class HeaderAdapter extends BaseAdapter {
             convertView = (View) lInflater.inflate(R.layout.header, parent, false);
         }
         TextView text=(TextView)convertView.findViewById(R.id.list_header_title);
-        text.setText(Datastring.get(position));
+        if (text != null)
+            text.setText(Datastring.get(position));
         return convertView;
     }
 

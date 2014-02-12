@@ -8,18 +8,13 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <application
+    <application android:name=".WBWApplication"
             android:label="@string/app_name"
             android:theme="@android:style/Theme.Holo.Light"
             android:icon="@drawable/ic_launcher">
         <activity android:name="com.facebook.LoginActivity"
                   android:label="@string/app_name" />
 
-        <activity
-                android:name="MyActivity"
-                android:label="@string/app_name">
-
-        </activity>
         <activity android:name=".ItemList.ItemListActivity"
                 >
             <intent-filter>

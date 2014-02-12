@@ -7,7 +7,6 @@ import android.util.Log;
 import com.parse.ParseClassName;
 import com.parse.ParseException;
 import com.parse.ParseObject;
-import com.sashapps.WhoBringsWhat.Persistence.Persister;
 import com.sashapps.WhoBringsWhat.R;
 import com.sashapps.WhoBringsWhat.Utils;
 
@@ -24,8 +23,8 @@ public class Item extends ParseObject {
         put("itemList",itemList);
     }
 
-    public String getCategory() {
-        return getString("category");
+    public Category getCategory() {
+        return (Category)getParseObject("category");
     }
 
     public void setCategory(Category category) {

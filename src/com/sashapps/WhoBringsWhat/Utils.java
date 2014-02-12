@@ -19,7 +19,7 @@ public class Utils {
 
     private static String userFacebookId;
 
-    public static String LOG_TAG="WhoBringsWhat";
+
 
     public static Bitmap getDefaultPhoto() {
         return defaultPhoto;

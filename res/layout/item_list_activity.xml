@@ -1,29 +1,53 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
               android:background="#fafafa"
+              android:weightSum="100"
         >
 
-    <ListView android:id="@+id/list_item"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:dividerHeight="4sp"
-              android:divider="#fafafa"
-              android:layout_margin="8dp"
-              android:visibility="gone"
+    <FrameLayout android:layout_width="match_parent" android:layout_height="0dp"
+                 android:layout_weight="90"
+            >
+
+
+        <ListView android:id="@+id/list_item"
+                  android:layout_width="match_parent"
+                  android:layout_height="match_parent"
+                  android:dividerHeight="4sp"
+                  android:divider="#fafafa"
+                  android:layout_margin="8dp"
+                />
+
+        <ProgressBar
+                style="?android:attr/progressBarStyleLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/progressBar"
+                android:layout_gravity="center"
+                android:visibility="gone"
+                />
+
+    </FrameLayout>
+
+
+    <View android:layout_height="1dp"
+          android:layout_width="match_parent"
+          android:background="#fff6f6f6"
             />
 
     <TextView
             android:id="@+id/add_item"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:text="Add Item"
             android:fontFamily="sans_serif-condensed"
+            android:textSize="16sp"
+            android:layout_weight="10"
+            android:layout_gravity="center"
             />
 
 </LinearLayout>

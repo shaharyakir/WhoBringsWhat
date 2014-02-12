@@ -14,12 +14,11 @@
  * limitations under the License.
  */
 
-package com.sashapps.WhoBringsWhat.ItemList;
+package com.sashapps.WhoBringsWhat.View.Utils;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
-import android.graphics.Color;
 import android.graphics.Rect;
 import android.os.SystemClock;
 import android.view.*;

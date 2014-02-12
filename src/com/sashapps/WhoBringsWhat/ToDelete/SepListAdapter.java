@@ -1,4 +1,4 @@
-package com.sashapps.WhoBringsWhat.ItemList;
+package com.sashapps.WhoBringsWhat.ToDelete;
 
 /**
  * Created by shahar on 2/9/14.
@@ -7,17 +7,11 @@ package com.sashapps.WhoBringsWhat.ItemList;
         import java.util.LinkedHashMap;
         import java.util.Map;
         import android.content.Context;
-        import android.content.res.Resources;
-        import android.graphics.Bitmap;
-        import android.graphics.BitmapFactory;
-        import android.graphics.drawable.Drawable;
-        import android.util.Log;
         import android.view.View;
         import android.view.ViewGroup;
         import android.widget.Adapter;
-        import android.widget.ArrayAdapter;
         import android.widget.BaseAdapter;
-        import com.sashapps.WhoBringsWhat.R;
+        import com.sashapps.WhoBringsWhat.ItemList.Item;
 
 public class SepListAdapter extends BaseAdapter {
 
@@ -32,6 +26,11 @@ public class SepListAdapter extends BaseAdapter {
     public void addSection(String section, Adapter adapter) {
         this.headers.add(section);
         this.sections.put(section, adapter);
+    }
+
+    public void setDataset(String category,ArrayList<Item> newDataset) {
+        OLDItemListAdapter adapter = (OLDItemListAdapter)sections.get(category);
+        adapter.setDataset(newDataset);
     }
 
     public Object getItem(int position) {
@@ -49,7 +48,13 @@ public class SepListAdapter extends BaseAdapter {
         return null;
     }
 
-
+    public void addItem(String categoryTitle,Item item){
+        Adapter a = this.sections.get(categoryTitle);
+        if (a != null){
+            ((OLDItemListAdapter)a).addItem(item);
+            /*this.notifyDataSetChanged();*/
+        }
+    }
 
     public int getCount() {
         // total together all sections, plus one for each section header
@@ -103,7 +108,7 @@ public class SepListAdapter extends BaseAdapter {
 
             // check if position inside this section
             if(position < size) {
-                ((ItemListAdapter) adapter).remove(position - 1);
+                ((OLDItemListAdapter) adapter).remove(position - 1);
                 break;
             }
             else{
@@ -123,8 +128,14 @@ public class SepListAdapter extends BaseAdapter {
             int size = adapter.getCount() + 1;
 
             // check if position inside this section
-            if(position == 0) return headers.getView(sectionnum, convertView, parent); // this is where your header names will get bind. correctly.
-            if(position < size) return adapter.getView(position - 1, convertView, parent);
+            if(position == 0)
+            {
+                return headers.getView(sectionnum, convertView, parent); // this is where your header names will get bind. correctly.
+            }
+            if(position < size)
+            {
+                return adapter.getView(position - 1, convertView, parent);
+            }
 
             // otherwise jump into next section
             position -= size;
