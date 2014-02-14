@@ -1,5 +1,6 @@
 package com.sashapps.WhoBringsWhat.ItemList;
 
+import android.app.Application;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -7,6 +8,7 @@ import android.util.Log;
 import com.parse.ParseClassName;
 import com.parse.ParseException;
 import com.parse.ParseObject;
+import com.parse.ParseUser;
 import com.sashapps.WhoBringsWhat.R;
 import com.sashapps.WhoBringsWhat.Utils;
 
@@ -14,6 +16,18 @@ import com.sashapps.WhoBringsWhat.Utils;
 public class Item extends ParseObject {
 
     private Bitmap mPhoto;
+
+    public ParseUser getUser(){
+        return (ParseUser)getParseUser("user");
+    }
+
+    public void setUser(ParseUser user) {
+        put("user", user);
+    }
+
+    public void removeUser(){
+        this.remove("user");
+    }
 
     public ItemList getItemList() {
         return (ItemList)getParseObject("itemList");
@@ -32,7 +46,7 @@ public class Item extends ParseObject {
     }
 
     public Boolean isRegistered() {
-        return getBoolean("isRegistered");
+        return getUser() != null;
     }
 
     public Bitmap getPhoto() {
@@ -40,14 +54,14 @@ public class Item extends ParseObject {
     }
 
     public void register() {
-        this.mPhoto = Utils.getFacebookPhoto();
-        this.setIsRegistered(true);
+        this.mPhoto = Utils.getCurrentUserFacebookPhoto(); // TODO: cache photo or wait till loaded
+        this.setUser(ParseUser.getCurrentUser());
         this.saveInBackground();
     }
 
     public void unregister() {
         this.mPhoto = Utils.getDefaultPhoto();
-        this.setIsRegistered(false);
+        this.removeUser();
         this.saveInBackground();
     }
 
@@ -99,7 +113,6 @@ public class Item extends ParseObject {
         this.setTitle(title);
         this.setDescription(description);
         this.setQuantity(quantity);
-        this.setIsRegistered(false);
         mPhoto = Utils.getDefaultPhoto();
         saveInBackground();
     }

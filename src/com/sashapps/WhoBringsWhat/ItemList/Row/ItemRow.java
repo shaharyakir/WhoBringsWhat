@@ -26,6 +26,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import com.sashapps.WhoBringsWhat.ItemList.Item;
 import com.sashapps.WhoBringsWhat.R;
@@ -48,7 +49,8 @@ public class ItemRow implements Row {
 
             holder = new ViewHolder((TextView)viewGroup.findViewById(R.id.title),
                                     (TextView)viewGroup.findViewById(R.id.quantity),
-                                    (ImageView)viewGroup.findViewById(R.id.profilepic)
+                                    (ImageView)viewGroup.findViewById(R.id.profilepic),
+                                    (ProgressBar)viewGroup.findViewById(R.id.profilepic_progressbar)
                                     );
             viewGroup.setTag(holder);
 
@@ -65,6 +67,9 @@ public class ItemRow implements Row {
         holder.title.setText(item.getTitle());
         holder.quantity.setText(quantity);
         holder.profilepic.setImageBitmap(item.getPhoto());
+        if (! item.isRegistered() || item.getPhoto() != null){
+            holder.progressBar.setVisibility(View.GONE);
+        }
 
         return view;
     }
@@ -86,11 +91,13 @@ public class ItemRow implements Row {
         final TextView title;
         final TextView quantity;
         final ImageView profilepic;
+        final ProgressBar progressBar;
 
-        private ViewHolder(TextView title, TextView quantity, ImageView profilepic) {
+        private ViewHolder(TextView title, TextView quantity, ImageView profilepic, ProgressBar progressBar) {
             this.title=title;
             this.quantity = quantity;
             this.profilepic = profilepic;
+            this.progressBar = progressBar;
         }
     }
 }

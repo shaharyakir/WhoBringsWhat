@@ -13,16 +13,24 @@ public class Utils {
 
     public static int PARSE_DELETED=3;
 
-    private static int num=0;
-
-    private static ItemList theItemList;
-
     private static String userFacebookId;
-
-
+    private static Bitmap userPhoto;
 
     public static Bitmap getDefaultPhoto() {
         return defaultPhoto;
+    }
+
+    public static Bitmap getCurrentUserFacebookPhoto() {
+        if (userPhoto != null){
+        return userPhoto;
+        }
+        else{
+            return getDefaultPhoto();
+        }
+    }
+
+    public static void setCurrentUserFacebookPhoto(Bitmap b){
+        userPhoto=b;
     }
 
     public static void setDefaultPhoto(Bitmap defaultPhoto) {
@@ -31,37 +39,14 @@ public class Utils {
 
     private static Bitmap defaultPhoto;
 
-    public static Bitmap getFacebookPhoto() {
-        return facebookPhoto;
+    private static ItemList itemList;
+
+    public static ItemList getItemList() {
+        return itemList;
     }
-
-    public static void setFacebookPhoto(Bitmap facebookPhoto) {
-        Utils.facebookPhoto = facebookPhoto;
-    }
-
-    private static Bitmap facebookPhoto;
-
-
-    public static String GOAL_SERIALIZABLE_OBJECT = "GOAL";
-
-    public static int generateNumber(){
-        return num++;
-    }
-
-    public static String getUserFacebookId() {
-        return userFacebookId;
-    }
-
-    public static void setUserFacebookId(String userFacebookId) {
-        Utils.userFacebookId = userFacebookId;
-    }
-
-
-    public static ItemList getItemList(){
-        return theItemList;
-    }
-
     public static void setItemList(ItemList il){
-        theItemList=il;
+        itemList=il;
     }
+
+
 }

@@ -9,6 +9,7 @@ import android.os.Bundle;
 public abstract class WBWBaseActivity extends Activity {
 
     WBWApplication mApplication;
+    public String LOG_TAG;
 
     public WBWApplication getWBWApplication(){
         return mApplication;
@@ -18,5 +19,6 @@ public abstract class WBWBaseActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         mApplication = (WBWApplication)getApplication();
+        this.LOG_TAG = mApplication.LOG_TAG;
     }
 }

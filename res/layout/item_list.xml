@@ -10,13 +10,20 @@
               >
 
 
+        <FrameLayout android:layout_width="32dp" android:layout_height="32dp"
+                     android:layout_marginRight="8dp">
+        <ProgressBar android:id="@+id/profilepic_progressbar"
+                     android:layout_width="wrap_content"
+                     android:layout_height="wrap_content"
+                     android:layout_gravity="center"/>
         <ImageView
                 android:id="@+id/profilepic"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
                 android:src="@drawable/com_facebook_profile_default_icon"
-                android:layout_marginRight="8dp"
+
                 android:layout_weight="0"/>
+        </FrameLayout>
 
     <TextView android:id="@+id/title"
               android:layout_width="0dp"
