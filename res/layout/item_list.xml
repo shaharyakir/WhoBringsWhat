@@ -9,9 +9,32 @@
               android:background="@drawable/back"
               >
 
+    <TextView android:id="@+id/quantity"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:textSize="18sp"
+              android:fontFamily="sans-serif-condensed"
+              android:text="20"
+              android:layout_marginRight="4dp"
+              android:layout_gravity="center"/>
 
-        <FrameLayout android:layout_width="32dp" android:layout_height="32dp"
-                     android:layout_marginRight="8dp">
+
+    <TextView android:id="@+id/title"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:textSize="18sp"
+              android:textStyle="normal"
+              android:fontFamily="sans-serif-condensed"
+              android:text="Burgers"
+              android:layout_gravity="center"
+
+              android:layout_weight="15"/>
+
+
+
+    <FrameLayout android:layout_width="32dp" android:layout_height="32dp"
+
+            >
         <ProgressBar android:id="@+id/profilepic_progressbar"
                      android:layout_width="wrap_content"
                      android:layout_height="wrap_content"
@@ -20,29 +43,8 @@
                 android:id="@+id/profilepic"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:src="@drawable/com_facebook_profile_default_icon"
+                android:src="@drawable/ic_nobody"
 
-                android:layout_weight="0"/>
-        </FrameLayout>
-
-    <TextView android:id="@+id/title"
-              android:layout_width="0dp"
-              android:layout_height="wrap_content"
-              android:textSize="18sp"
-              android:textStyle="normal"
-              android:fontFamily="sans-serif-condensed"
-              android:text="Burgers"
-              android:layout_gravity="center"
-              android:layout_weight="1"/>
-
-        <TextView android:id="@+id/quantity"
-              android:layout_width="0dp"
-              android:layout_height="wrap_content"
-              android:textSize="24sp"
-              android:textStyle="bold"
-              android:fontFamily="sans-serif-condensed"
-              android:layout_gravity="center"
-              android:text="20"
-              android:layout_weight="1"
-              android:gravity="right"/>
+                />
+    </FrameLayout>
 </LinearLayout>

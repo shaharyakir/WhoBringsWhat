@@ -120,4 +120,8 @@ public class Item extends ParseObject {
     public Item() {
         mPhoto = Utils.getDefaultPhoto();
     }
+
+    public boolean isCurrentUserOwnerOfItem() {
+        return this.isRegistered() && ParseUser.getCurrentUser().getUsername().equals(this.getUser().getUsername());
+    }
 }

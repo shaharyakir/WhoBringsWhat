@@ -7,7 +7,7 @@ import android.widget.TextView;
 import com.sashapps.WhoBringsWhat.ItemList.Category;
 import com.sashapps.WhoBringsWhat.R;
 
-public class CategoryRow implements Row {
+public class CategoryRow implements IRow {
     private final Category category;
     private final LayoutInflater inflater;
 
@@ -49,6 +49,17 @@ public class CategoryRow implements Row {
     @Override
     public void removeItem() {
     }
+
+    @Override
+    public boolean isHidden() {
+        return false;
+    }
+
+    @Override
+    public void setHidden(boolean hidden) {
+
+    }
+
 
     private static class ViewHolder {
 

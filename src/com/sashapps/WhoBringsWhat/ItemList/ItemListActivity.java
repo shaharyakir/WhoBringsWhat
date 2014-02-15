@@ -5,6 +5,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -25,6 +26,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import com.jensdriller.libs.undobar.UndoBar;
 
 /**
  * Created by shahar on 2/9/14.
@@ -47,7 +49,7 @@ public class ItemListActivity extends WBWBaseActivity {
 
         Log.d(getWBWApplication().LOG_TAG, "Started");
         /* Init App */
-        Utils.setDefaultPhoto(BitmapFactory.decodeResource(getResources(), R.drawable.com_facebook_profile_default_icon));
+        Utils.setDefaultPhoto(BitmapFactory.decodeResource(getResources(), R.drawable.ic_nobody));
         getWBWApplication().initParse();
         ParseAnalytics.trackAppOpened(getIntent());
         findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
@@ -89,7 +91,9 @@ public class ItemListActivity extends WBWBaseActivity {
                     if (!i.isRegistered()) {
                         i.register();
                     } else {
-                        i.unregister();
+                        if (i.isCurrentUserOwnerOfItem()) {
+                            i.unregister();
+                        }
                     }
                     adapter.notifyDataSetChanged();
                 }
@@ -103,6 +107,7 @@ public class ItemListActivity extends WBWBaseActivity {
         ArrayList<Category> categoryList;
         int asyncNumberOfCallbacks;
         int asyncCount;
+        Item deletedItem=null;
 
         private void initList() {
 
@@ -115,6 +120,20 @@ public class ItemListActivity extends WBWBaseActivity {
 
             Log.d(getWBWApplication().LOG_TAG, "InitList");
 
+            final UndoBar.Listener undoListener = new UndoBar.Listener() {
+                @Override
+                public void onHide() {
+                    deletedItem.deleteItem();
+                }
+
+                @Override
+                public void onUndo(Parcelable token) {
+                    adapter.restoreItem();
+                    adapter.notifyDataSetChanged();
+                    deletedItem=null;
+                }
+            };
+
             // Set listeners
             listView.setOnItemClickListener(listHandlers.onItemClickListener);
             SwipeDismissListViewTouchListener swipeListener = new SwipeDismissListViewTouchListener(listView,
@@ -126,11 +145,17 @@ public class ItemListActivity extends WBWBaseActivity {
 
                         @Override
                         public void onDismiss(ListView listView, int[] reverseSortedPositions) {
+
                             for (int position : reverseSortedPositions) {
-                                ((Item) adapter.getItem(position)).deleteItem();
-                                adapter.remove(position);
+                                deletedItem = ((Item) adapter.getItem(position));
+                                adapter.hide(position);
                             }
                             adapter.notifyDataSetChanged();
+
+                            new UndoBar.Builder(ItemListActivity.this)
+                                         .setMessage("Deleted '" + deletedItem.getTitle() + "'")
+                                         .setListener(undoListener).
+                                         show();
                         }
                     });
             listView.setOnTouchListener(swipeListener);
@@ -293,7 +318,7 @@ public class ItemListActivity extends WBWBaseActivity {
         return null;
     }
 
-    private class loadCurrentUserPhoto extends  AsyncTask<String,Void,Bitmap>{
+    private class loadCurrentUserPhoto extends AsyncTask<String, Void, Bitmap> {
         @Override
         protected Bitmap doInBackground(String... params) {
             String fbid = params[0];
@@ -310,7 +335,7 @@ public class ItemListActivity extends WBWBaseActivity {
         protected Bitmap doInBackground(Item... params) {
             Item item = params[0];
             String userFBID = item.getUser().getString("facebookId");
-            Bitmap b =loadFacebookPhoto(userFBID);
+            Bitmap b = loadFacebookPhoto(userFBID);
             item.setPhoto(b);
             return b;
         }
@@ -329,4 +354,5 @@ public class ItemListActivity extends WBWBaseActivity {
         ParseFacebookUtils.finishAuthentication(requestCode, resultCode, data);
     }
 }
+
 

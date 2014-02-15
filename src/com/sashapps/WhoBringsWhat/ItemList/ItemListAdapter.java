@@ -2,41 +2,42 @@ package com.sashapps.WhoBringsWhat.ItemList;
 
 import android.app.Activity;
 import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.LinearLayout;
+import com.sashapps.WhoBringsWhat.ItemList.Row.*;
 import com.sashapps.WhoBringsWhat.ItemList.Row.CategoryRow;
-import com.sashapps.WhoBringsWhat.ItemList.Row.ItemRow;
-import com.sashapps.WhoBringsWhat.ItemList.Row.Row;
-import com.sashapps.WhoBringsWhat.ItemList.Row.RowType;
+import com.sashapps.WhoBringsWhat.ItemList.Row.IRow;
 import com.sashapps.WhoBringsWhat.WBWApplication;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by shahar on 2/12/14.
  */
 public class ItemListAdapter extends BaseAdapter {
-    final List<Row> rows;
+    final ArrayList<IRow> rows;
     final Activity activity;
     final LayoutInflater inflater;
     final String LOG_TAG;
+    Item deletedItem;
+    int deletedItemPos;
 
     ItemListAdapter(Activity a, ArrayList<Item> items, ArrayList<Category> categories){
         activity = a;
         LOG_TAG = ((WBWApplication)a.getApplication()).LOG_TAG;
         inflater = (LayoutInflater)activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        rows = new ArrayList<Row>();
+        deletedItem=null;
+        deletedItemPos=0;
+        rows = new ArrayList<IRow>();
+
 
         for (Category category : categories) {
             rows.add(new CategoryRow(inflater, category));
             for (Item item : items) {
                 if (item.getCategory().getTitle().equals(category.getTitle())){
-                    rows.add(new ItemRow(inflater,item));
+                    rows.add(new ItemRow(inflater, item));
                 }
             }
         }
@@ -54,7 +55,19 @@ public class ItemListAdapter extends BaseAdapter {
 
     public void remove(int position){
         rows.get(position).removeItem();
+       rows.remove(position);
+    }
+
+    public void hide(int position) {
+        deletedItem = (Item) this.getItem(position);
+        deletedItemPos = position;
         rows.remove(position);
+    }
+
+    public void restoreItem(){
+        rows.add(deletedItemPos,new ItemRow(inflater,deletedItem));
+        deletedItem=null;
+        deletedItemPos=0;
     }
 
     @Override
@@ -81,11 +94,11 @@ public class ItemListAdapter extends BaseAdapter {
 
     public void addItem(Item i) {
         int pos=0;
-        for (Row row : rows) {
+        for (IRow IRow : rows) {
 
-            if (row.getViewType() == RowType.CATEGORY.ordinal()){
-                if (((Category)row.getItem()).getTitle().equals(i.getCategory().getTitle())){
-                    rows.add(pos+1,new ItemRow(inflater, i));
+            if (IRow.getViewType() == RowType.CATEGORY.ordinal()){
+                if (((Category) IRow.getItem()).getTitle().equals(i.getCategory().getTitle())){
+                    rows.add(pos + 1, new ItemRow(inflater, i));
                     break;
                 }
             }
@@ -93,4 +106,6 @@ public class ItemListAdapter extends BaseAdapter {
         }
 
     }
+
 }
+

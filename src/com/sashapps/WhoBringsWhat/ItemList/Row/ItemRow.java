@@ -31,9 +31,10 @@ import android.widget.TextView;
 import com.sashapps.WhoBringsWhat.ItemList.Item;
 import com.sashapps.WhoBringsWhat.R;
 
-public class ItemRow implements Row {
+public class ItemRow implements IRow {
     private final Item item;
     private final LayoutInflater inflater;
+    private boolean hidden;
 
     public ItemRow(LayoutInflater inflater, Item item) {
         this.item = item;
@@ -63,9 +64,16 @@ public class ItemRow implements Row {
         }
 
         //actually setup the view
-        String quantity = item.getQuantity() != null ? item.getQuantity().toString() : "";
         holder.title.setText(item.getTitle());
-        holder.quantity.setText(quantity);
+
+        if (item.getQuantity() == null){
+            holder.quantity.setVisibility(View.GONE);
+        }
+        else{
+            holder.quantity.setVisibility(View.VISIBLE);
+            holder.quantity.setText(item.getQuantity().toString());
+        }
+
         holder.profilepic.setImageBitmap(item.getPhoto());
         if (! item.isRegistered() || item.getPhoto() != null){
             holder.progressBar.setVisibility(View.GONE);
@@ -86,6 +94,17 @@ public class ItemRow implements Row {
     public void removeItem() {
         item.deleteItem();
     }
+
+    @Override
+    public boolean isHidden() {
+        return hidden;
+    }
+
+    @Override
+    public void setHidden(boolean hidden) {
+        this.hidden = hidden;
+    }
+
 
     private static class ViewHolder {
         final TextView title;
