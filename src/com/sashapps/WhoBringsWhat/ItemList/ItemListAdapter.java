@@ -21,22 +21,18 @@ public class ItemListAdapter extends BaseAdapter {
     final Activity activity;
     final LayoutInflater inflater;
     final String LOG_TAG;
-    Item deletedItem;
-    int deletedItemPos;
 
-    ItemListAdapter(Activity a, ArrayList<Item> items, ArrayList<Category> categories){
+    ItemListAdapter(Activity a, ArrayList<Item> items, ArrayList<Category> categories) {
         activity = a;
-        LOG_TAG = ((WBWApplication)a.getApplication()).LOG_TAG;
-        inflater = (LayoutInflater)activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        deletedItem=null;
-        deletedItemPos=0;
+        LOG_TAG = ((WBWApplication) a.getApplication()).LOG_TAG;
+        inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         rows = new ArrayList<IRow>();
 
 
         for (Category category : categories) {
             rows.add(new CategoryRow(inflater, category));
             for (Item item : items) {
-                if (item.getCategory().getTitle().equals(category.getTitle())){
+                if (item.getCategory().getTitle().equals(category.getTitle())) {
                     rows.add(new ItemRow(inflater, item));
                 }
             }
@@ -53,21 +49,8 @@ public class ItemListAdapter extends BaseAdapter {
         return rows.get(position).getItem();
     }
 
-    public void remove(int position){
-        rows.get(position).removeItem();
-       rows.remove(position);
-    }
-
-    public void hide(int position) {
-        deletedItem = (Item) this.getItem(position);
-        deletedItemPos = position;
+    public void remove(int position) {
         rows.remove(position);
-    }
-
-    public void restoreItem(){
-        rows.add(deletedItemPos,new ItemRow(inflater,deletedItem));
-        deletedItem=null;
-        deletedItemPos=0;
     }
 
     @Override
@@ -92,17 +75,28 @@ public class ItemListAdapter extends BaseAdapter {
         return rows.get(position).getViewType();
     }
 
-    public void addItem(Item i) {
-        int pos=0;
-        for (IRow IRow : rows) {
+    public void addItem(Item i, int position) {
+        rows.add(position, new ItemRow(inflater, i));
+    }
 
-            if (IRow.getViewType() == RowType.CATEGORY.ordinal()){
-                if (((Category) IRow.getItem()).getTitle().equals(i.getCategory().getTitle())){
+    public void addItem(Item i) {
+        boolean isFound = false;
+        int pos = 0;
+        for (IRow row : rows) {
+
+            if (row.getViewType() == RowType.CATEGORY.ordinal()) {
+                if (((Category) row.getItem()).getTitle().equals(i.getCategory().getTitle())) {
                     rows.add(pos + 1, new ItemRow(inflater, i));
+                    isFound = true;
                     break;
                 }
             }
-            pos+=1;
+            pos += 1;
+        }
+
+        if (!isFound) {
+            rows.add(new CategoryRow(inflater, i.getCategory()));
+            rows.add(new ItemRow(inflater, i));
         }
 
     }

@@ -9,17 +9,43 @@
               android:weightSum="100"
         >
 
-    <FrameLayout android:layout_width="match_parent" android:layout_height="0dp"
-                 android:layout_weight="90"
+    <LinearLayout android:layout_width="match_parent" android:layout_height="52dp"
+                  android:orientation="horizontal"
+                  android:background="@drawable/back"
+                  android:weightSum="100"
             >
+        <EditText android:id="@+id/item_list_activity_add_item_edittext"
+                android:layout_width="0dp" android:layout_height="wrap_content"
+                  android:hint="Add item"
+                  android:padding="12dp"
+                  android:layout_weight="95"
+                  android:cursorVisible="false"
+                  android:capitalize="sentences"
+                  android:background="@android:color/white"
+                  android:fontFamily="sans-serif-condensed" android:clickable="true" android:singleLine="true"
+                  android:layout_gravity="center_vertical"/>
+        <Button android:id="@+id/item_list_activity_add_item_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="5"
+                android:background="@android:color/white"
+                android:layout_gravity="right"
+                android:text="Add" android:textColor="#6b6b6b" android:fontFamily="sans-serif-condensed"
+                android:singleLine="false"  android:visibility="invisible"/>
+    </LinearLayout>
 
+    <View android:layout_width="match_parent" android:layout_height="2dp" android:background="#ebebeb"/>
+
+    <FrameLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+            >
 
         <ListView android:id="@+id/list_item"
                   android:layout_width="match_parent"
                   android:layout_height="match_parent"
                   android:dividerHeight="4sp"
                   android:divider="#fafafa"
-                  android:layout_margin="8dp"
+                  android:layout_marginLeft="8dp"
+                  android:layout_marginRight="8dp"
                 />
 
         <ProgressBar
@@ -33,21 +59,5 @@
 
     </FrameLayout>
 
-
-    <View android:layout_height="1dp"
-          android:layout_width="match_parent"
-          android:background="#fff6f6f6"
-            />
-
-    <TextView
-            android:id="@+id/add_item"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:text="Add Item"
-            android:fontFamily="sans_serif-condensed"
-            android:textSize="16sp"
-            android:layout_weight="10"
-            android:layout_gravity="center"
-            />
 
 </LinearLayout>
