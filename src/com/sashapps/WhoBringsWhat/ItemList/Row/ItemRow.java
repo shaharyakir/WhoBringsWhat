@@ -22,61 +22,104 @@ THE SOFTWARE.
 
 package com.sashapps.WhoBringsWhat.ItemList.Row;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.ProgressBar;
-import android.widget.TextView;
+import android.view.ViewPropertyAnimator;
+import android.view.animation.Animation;
+import android.view.animation.Transformation;
+import android.widget.*;
 import com.sashapps.WhoBringsWhat.ItemList.Item;
+import com.sashapps.WhoBringsWhat.ItemList.ItemListActivity;
+import com.sashapps.WhoBringsWhat.ItemList.ItemListAdapter;
+import com.sashapps.WhoBringsWhat.ItemList.XListView;
 import com.sashapps.WhoBringsWhat.R;
 
 public class ItemRow implements IRow {
     private final Item item;
     private final LayoutInflater inflater;
-    private boolean hidden;
+    private final XListView listView;
 
-    public ItemRow(LayoutInflater inflater, Item item) {
+    public ItemRow(LayoutInflater inflater, Item item,XListView listView) {
         this.item = item;
         this.inflater = inflater;
+        this.listView = listView;
     }
 
-    public View getView(View convertView) {
+    public View getView(View convertView,int position) {
         ViewHolder holder;
         View view;
 
         if (convertView == null) {
-            ViewGroup viewGroup = (ViewGroup)inflater.inflate(R.layout.item_list, null);
 
-            holder = new ViewHolder((TextView)viewGroup.findViewById(R.id.title),
-                                    (TextView)viewGroup.findViewById(R.id.quantity),
-                                    (ImageView)viewGroup.findViewById(R.id.profilepic),
-                                    (ProgressBar)viewGroup.findViewById(R.id.profilepic_progressbar)
-                                    );
+            ViewGroup viewGroup = (ViewGroup) inflater.inflate(R.layout.item_list, null);
+
+            holder = new ViewHolder();
+
+            holder.title = (TextView) viewGroup.findViewById(R.id.title);
+            holder.quantity = (TextView) viewGroup.findViewById(R.id.quantity);
+            holder.profilepic = (ImageView) viewGroup.findViewById(R.id.profilepic);
+            holder.progressBar = (ProgressBar) viewGroup.findViewById(R.id.profilepic_progressbar);
+            holder.editLayout = (LinearLayout) viewGroup.findViewById(R.id.item_list_activity_edit_item_layout);
+            holder.quantityEditText = (EditText) viewGroup.findViewById(R.id.item_list_activity_quantity_edit_text);
+            holder.editItemButton = (Button) viewGroup.findViewById(R.id.item_list_activity_edit_item_button);
+
+
             viewGroup.setTag(holder);
 
             view = viewGroup;
         } else {
             //get the holder back out
-            holder = (ViewHolder)convertView.getTag();
+            holder = (ViewHolder) convertView.getTag();
 
             view = convertView;
         }
 
+        final int finalPos = position;
+
+        holder.editItemButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                listView.resetState(finalPos, new XListView.OnAnimationEndCallback() {
+                    @Override
+                    public void onAnimationCallback() {
+                        item.setIsEdit(!item.isEdit());
+                        ((ItemListAdapter)listView.getAdapter()).notifyDataSetChanged();
+                    }
+                });
+
+            }
+        });
+
+        holder.quantityEditText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ((EditText)v).setText("900");
+                item.setQuantity(900);
+            }
+        });
+
+
         //actually setup the view
         holder.title.setText(item.getTitle());
 
-        if (item.getQuantity() == null){
+        if (item.getQuantity() == null) {
             holder.quantity.setVisibility(View.GONE);
-        }
-        else{
+        } else {
             holder.quantity.setVisibility(View.VISIBLE);
             holder.quantity.setText(item.getQuantity().toString());
         }
 
         holder.profilepic.setImageBitmap(item.getPhoto());
-        if (! item.isRegistered() || item.getPhoto() != null){
+        if (!item.isRegistered() || item.getPhoto() != null) {
             holder.progressBar.setVisibility(View.GONE);
+        }
+
+        if (item.isEdit()) {
+            holder.editLayout.setVisibility(View.VISIBLE);
+        } else {
+            holder.editLayout.setVisibility(View.GONE);
         }
 
         return view;
@@ -86,7 +129,7 @@ public class ItemRow implements IRow {
         return RowType.ITEM.ordinal();
     }
 
-    public Object getItem(){
+    public Object getItem() {
         return item;
     }
 
@@ -96,27 +139,21 @@ public class ItemRow implements IRow {
     }
 
     @Override
-    public boolean isHidden() {
-        return hidden;
+    public void setEditMode(boolean isEdit) {
+        item.setIsEdit(isEdit);
     }
 
-    @Override
-    public void setHidden(boolean hidden) {
-        this.hidden = hidden;
+    public boolean getEditMode() {
+        return item.isEdit();
     }
-
 
     private static class ViewHolder {
-        final TextView title;
-        final TextView quantity;
-        final ImageView profilepic;
-        final ProgressBar progressBar;
-
-        private ViewHolder(TextView title, TextView quantity, ImageView profilepic, ProgressBar progressBar) {
-            this.title=title;
-            this.quantity = quantity;
-            this.profilepic = profilepic;
-            this.progressBar = progressBar;
-        }
+        TextView title;
+        TextView quantity;
+        ImageView profilepic;
+        ProgressBar progressBar;
+        LinearLayout editLayout;
+        EditText quantityEditText;
+        Button editItemButton;
     }
 }

@@ -2,6 +2,7 @@
 
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:swipe="http://schemas.android.com/apk/res/auto"
               android:orientation="vertical"
               android:layout_width="match_parent"
               android:layout_height="match_parent"
@@ -15,13 +16,14 @@
                   android:weightSum="100"
             >
         <EditText android:id="@+id/item_list_activity_add_item_edittext"
-                android:layout_width="0dp" android:layout_height="wrap_content"
+                  android:layout_width="0dp" android:layout_height="wrap_content"
                   android:hint="Add item"
                   android:padding="12dp"
                   android:layout_weight="95"
                   android:cursorVisible="false"
                   android:capitalize="sentences"
                   android:background="@android:color/white"
+                  android:imeOptions="actionDone"
                   android:fontFamily="sans-serif-condensed" android:clickable="true" android:singleLine="true"
                   android:layout_gravity="center_vertical"/>
         <Button android:id="@+id/item_list_activity_add_item_button"
@@ -31,21 +33,20 @@
                 android:background="@android:color/white"
                 android:layout_gravity="right"
                 android:text="Add" android:textColor="#6b6b6b" android:fontFamily="sans-serif-condensed"
-                android:singleLine="false"  android:visibility="invisible"/>
+                android:singleLine="false" android:visibility="invisible"/>
     </LinearLayout>
 
     <View android:layout_width="match_parent" android:layout_height="2dp" android:background="#ebebeb"/>
 
+
+    
+
     <FrameLayout android:layout_width="match_parent" android:layout_height="wrap_content"
             >
 
-        <ListView android:id="@+id/list_item"
+        <com.sashapps.WhoBringsWhat.ItemList.XListView android:id="@+id/list_item"
                   android:layout_width="match_parent"
                   android:layout_height="match_parent"
-                  android:dividerHeight="4sp"
-                  android:divider="#fafafa"
-                  android:layout_marginLeft="8dp"
-                  android:layout_marginRight="8dp"
                 />
 
         <ProgressBar

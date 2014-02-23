@@ -5,5 +5,11 @@
         <item name="android:textColor">#ff535353</item>
         <item name="android:fontFamily">sans-serif-condensed</item>
     </style>
+
+    <style name="elv_fade_animation">
+        <item name="@android:windowEnterAnimation">@anim/elv_popup_show</item>
+        <item name="@android:windowExitAnimation">@anim/elv_popup_hide</item>
+    </style>
+
 </resources>
 

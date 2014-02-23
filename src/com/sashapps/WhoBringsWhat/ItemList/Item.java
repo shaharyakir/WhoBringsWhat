@@ -16,6 +16,16 @@ import com.sashapps.WhoBringsWhat.Utils;
 public class Item extends ParseObject {
 
     private Bitmap mPhoto;
+    private boolean mIsEdit;
+
+    public boolean isEdit() {
+        return mIsEdit;
+    }
+
+    public void setIsEdit(boolean mIsEdit) {
+        this.mIsEdit = mIsEdit;
+    }
+
 
     public ParseUser getUser(){
         return (ParseUser)getParseUser("user");
@@ -42,7 +52,13 @@ public class Item extends ParseObject {
     }
 
     public void setCategory(Category category) {
-        put("category",category);
+        if (category != null) {
+            put("category",category);
+        }
+        else{
+            remove("category");
+        }
+
     }
 
     public Boolean isRegistered() {
@@ -78,6 +94,9 @@ public class Item extends ParseObject {
     public void setQuantity(Integer quantity) {
         if (quantity != null) {
             put("quantity", quantity);
+        }
+        else{
+            remove("quantity");
         }
     }
 

@@ -2,9 +2,11 @@ package com.sashapps.WhoBringsWhat.ItemList;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import com.sashapps.WhoBringsWhat.ItemList.Row.*;
 import com.sashapps.WhoBringsWhat.ItemList.Row.CategoryRow;
@@ -12,57 +14,39 @@ import com.sashapps.WhoBringsWhat.ItemList.Row.IRow;
 import com.sashapps.WhoBringsWhat.WBWApplication;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 /**
  * Created by shahar on 2/12/14.
  */
-public class ItemListAdapter extends BaseAdapter {
-    final ArrayList<IRow> rows;
-    final Activity activity;
+
+
+public class ItemListAdapter extends ArrayAdapter<IRow> {
+
     final LayoutInflater inflater;
     final String LOG_TAG;
+    final XListView listView;
 
-    ItemListAdapter(Activity a, ArrayList<Item> items, ArrayList<Category> categories) {
-        activity = a;
-        LOG_TAG = ((WBWApplication) a.getApplication()).LOG_TAG;
-        inflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        rows = new ArrayList<IRow>();
+    public ItemListAdapter(Context context, int resource, ArrayList<Item> items,XListView listView) {
+        super(context, resource);
+        setNotifyOnChange(true);
+        LOG_TAG = "WhoBringsWhat";
+        inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        this.listView = listView;
 
-
-        for (Category category : categories) {
-            rows.add(new CategoryRow(inflater, category));
-            for (Item item : items) {
-                if (item.getCategory().getTitle().equals(category.getTitle())) {
-                    rows.add(new ItemRow(inflater, item));
-                }
-            }
+        for (Item i : items) {
+            this.addItem(i);
         }
     }
 
-    @Override
-    public int getCount() {
-        return rows.size();
-    }
-
-    @Override
-    public Object getItem(int position) {
-        return rows.get(position).getItem();
-    }
-
     public void remove(int position) {
-        rows.remove(position);
-    }
-
-    @Override
-    public long getItemId(int position) {
-        return position;
+        remove(getItem(position));
     }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        View v;
-        v = rows.get(position).getView(convertView);
-        return v;
+        return getItem(position).getView(convertView,position);
     }
 
     @Override
@@ -72,33 +56,55 @@ public class ItemListAdapter extends BaseAdapter {
 
     @Override
     public int getItemViewType(int position) {
-        return rows.get(position).getViewType();
+        return getItem(position).getViewType();
+    }
+
+    @Override
+    public boolean hasStableIds() {
+        return false;
     }
 
     public void addItem(Item i, int position) {
-        rows.add(position, new ItemRow(inflater, i));
+        this.insert(new ItemRow(inflater, i,listView), position);
     }
 
-    public void addItem(Item i) {
-        boolean isFound = false;
-        int pos = 0;
-        for (IRow row : rows) {
+    public void setEditMode(int pos, boolean isEdit) {
+        getItem(pos).setEditMode(isEdit);
+    }
 
-            if (row.getViewType() == RowType.CATEGORY.ordinal()) {
-                if (((Category) row.getItem()).getTitle().equals(i.getCategory().getTitle())) {
-                    rows.add(pos + 1, new ItemRow(inflater, i));
-                    isFound = true;
-                    break;
+    public boolean getEditMode(int pos) {
+        return getItem(pos).getEditMode();
+    }
+
+    public Object getListItem(int pos) {
+        return getItem(pos).getItem();
+    }
+
+
+    public void addItem(Item i) {
+
+        int pos = 0;
+        boolean isCategoryFound = false;
+
+        if (i.getCategory() == null) {
+            insert(new ItemRow(inflater, i,listView), pos);
+        } else {
+            for (pos = 0; pos < getCount(); pos++) {
+                IRow row = getItem(pos);
+                if (row.getViewType() == RowType.CATEGORY.ordinal()) {
+                    if (((Category) row.getItem()).getTitle().equals(i.getCategory().getTitle())) {
+                        insert(new ItemRow(inflater, i,listView), pos + 1);
+                        isCategoryFound = true;
+                        break;
+                    }
                 }
             }
-            pos += 1;
-        }
 
-        if (!isFound) {
-            rows.add(new CategoryRow(inflater, i.getCategory()));
-            rows.add(new ItemRow(inflater, i));
+            if (!isCategoryFound) {
+                add(new CategoryRow(inflater, i.getCategory()));
+                add(new ItemRow(inflater, i,listView));
+            }
         }
-
     }
 
 }

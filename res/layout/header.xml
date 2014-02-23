@@ -3,19 +3,23 @@
 <LinearLayout android:layout_width="fill_parent"
               android:layout_height="wrap_content"
               android:orientation="horizontal"
+              android:background="#ff57baf3"
               xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_item"/>
+    <ImageView android:layout_width="32dp" android:layout_height="32dp" android:src="@drawable/ic_item"
+             android:visibility="gone"
+            />
     <TextView
             xmlns:android="http://schemas.android.com/apk/res/android"
             android:id="@+id/list_header_title"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:paddingTop="2dip"
+            android:textColor="#FFFFFF"
             android:paddingBottom="2dip"
             android:paddingLeft="5dip"
             android:fontFamily="sans-serif-condensed"
-            android:textSize="16sp"
+            android:textSize="18sp"
             android:layout_gravity="center"
             android:text="Food"
             />

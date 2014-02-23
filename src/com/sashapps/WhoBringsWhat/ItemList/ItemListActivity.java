@@ -3,6 +3,7 @@ package com.sashapps.WhoBringsWhat.ItemList;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Rect;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
@@ -10,10 +11,8 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ListView;
+import android.view.inputmethod.EditorInfo;
+import android.widget.*;
 import com.facebook.Request;
 import com.facebook.Response;
 import com.facebook.model.GraphUser;
@@ -33,13 +32,14 @@ import java.util.List;
 
 import com.jensdriller.libs.undobar.UndoBar;
 
+
 /**
  * Created by shahar on 2/9/14.
  */
 public class ItemListActivity extends WBWBaseActivity {
 
     ItemListAdapter adapter;
-    ListView listView;
+    XListView listView;
     Bitmap facebookPhoto;
     Bitmap defaultPhoto;
     ListHandlers listHandlers;
@@ -48,19 +48,19 @@ public class ItemListActivity extends WBWBaseActivity {
     ArrayList<Item> arrItems;
 
 
-
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.item_list_activity);
         findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
 
         dataLoader = new DataLoader();
-        addItemListeners =new AddItemListeners();
+        addItemListeners = new AddItemListeners();
 
         Log.d(getWBWApplication().LOG_TAG, "Started");
         /* Init App */
-        Utils.setDefaultPhoto(BitmapFactory.decodeResource(getResources(), R.drawable.ic_nobody));
+        Utils.setDefaultPhoto(BitmapFactory.decodeResource(getResources(), R.drawable.com_facebook_profile_default_icon));
         getWBWApplication().initParse();
+
         ParseAnalytics.trackAppOpened(getIntent());
 
         login();
@@ -68,18 +68,44 @@ public class ItemListActivity extends WBWBaseActivity {
 
     private class ListHandlers {
 
-        private ListView lv;
+        private XListView lv;
         private SwipeDismissListViewTouchListener swipeDismissListViewTouchListener;
         private SwipeDismissListViewTouchListener.DismissCallbacks dismissCallbacks;
         private Item deletedItem;
         private int deletedItemPosition;
 
-        ListHandlers(ListView lv) {
+        ListHandlers(XListView lv) {
             this.lv = lv;
             deletedItem = null;
             deletedItemPosition = 0;
-            lv.setOnItemClickListener(onItemClickListener);
-            dismissCallbacks = new SwipeDismissListViewTouchListener.DismissCallbacks() {
+            //lv.setOnItemClickListener(onItemClickListener);
+            //lv.setOnItemLongClickListener(onItemLongClickListener);
+
+            lv.setDismissCallback(new XListView.OnDismissCallback() {
+                @Override
+                public XListView.Undoable onDismiss(XListView XListView, int i) {
+                    final int pos = i;
+                    //final String st = (String)adapter.getItem(i);
+                    final Item item = (Item) adapter.getListItem(i);
+                    adapter.remove(i);
+
+                    adapter.notifyDataSetChanged();
+
+                    return new XListView.Undoable() {
+                        @Override
+                        public void undo() {
+                            adapter.addItem(item, pos);
+                            adapter.notifyDataSetChanged();
+                        }
+                    };
+                }
+            });
+
+            lv.enableSwipeToDismiss();
+            lv.setUndoStyle(XListView.UndoStyle.COLLAPSED_POPUP);
+            lv.setSwipingLayout(R.id.list_item_front);
+
+          /*  dismissCallbacks = new SwipeDismissListViewTouchListener.DismissCallbacks() {
                 @Override
                 public boolean canDismiss(int position) {
                     return adapter.getItemViewType(position) == RowType.ITEM.ordinal();
@@ -88,16 +114,14 @@ public class ItemListActivity extends WBWBaseActivity {
                 @Override
                 public void onDismiss(ListView listView, int[] reverseSortedPositions) {
                     for (int position : reverseSortedPositions) {
-                        Log.d(LOG_TAG, "in OnDismiss(), position:" + position + ", deletedItem: " + deletedItem);
+                        Log.d(LOG_TAG, String.valueOf(position));
                         if (deletedItem != null) {
-                            Log.d(LOG_TAG, "onDismiss(), about to delete: " + deletedItem.getTitle());
                             deletedItem.deleteItem();
                         }
-                        deletedItem = ((Item) adapter.getItem(position));
+                        deletedItem = ((Item) adapter.getListItem(position));
                         deletedItemPosition = position;
                         adapter.remove(position);
                     }
-                    adapter.notifyDataSetChanged();
 
                     new UndoBar.Builder(ItemListActivity.this)
                             .setMessage("Deleted '" + deletedItem.getTitle() + "'")
@@ -107,14 +131,15 @@ public class ItemListActivity extends WBWBaseActivity {
             };
             swipeDismissListViewTouchListener = new SwipeDismissListViewTouchListener(lv, dismissCallbacks);
             lv.setOnTouchListener(swipeDismissListViewTouchListener);
-            lv.setOnScrollListener(swipeDismissListViewTouchListener.makeScrollListener()); // Setting this scroll listener is required to ensure that during ListView scrolling, we don't look for swipes.
+            lv.setOnScrollListener(swipeDismissListViewTouchListener.makeScrollListener()); // Setting this scroll listener is required to ensure that during ListView scrolling, we don't look for swipes.*/
         }
+
 
         private AdapterView.OnItemClickListener onItemClickListener = new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (adapter.getItemViewType(position) == RowType.ITEM.ordinal()) {
-                    Item i = (Item) adapter.getItem(position);
+                if (parent.getAdapter().getItemViewType(position) == RowType.ITEM.ordinal()) {
+                    Item i = (Item) adapter.getListItem(position);
 
                     if (!i.isRegistered()) {
                         i.register();
@@ -128,12 +153,25 @@ public class ItemListActivity extends WBWBaseActivity {
             }
         };
 
+        private AdapterView.OnItemLongClickListener onItemLongClickListener = new AdapterView.OnItemLongClickListener() {
+            @Override
 
-        final UndoBar.Listener undoListener = new UndoBar.Listener() {
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                if (parent.getAdapter().getItemViewType(position) == RowType.ITEM.ordinal()) {
+                    adapter.setEditMode(position, ! adapter.getEditMode(position));
+                    adapter.notifyDataSetChanged();
+                    return true;
+                }
+                else
+                    return false;
+            }
+        };
+
+
+      /*  final UndoBar.Listener undoListener = new UndoBar.Listener() {
             @Override
             public void onHide(Object item) {
                 if (deletedItem != null) {
-                    Log.d(LOG_TAG, "onHide(), about to delete: " + deletedItem.getTitle());
                     deletedItem.deleteItem();
                     deletedItem = null;
                     deletedItemPosition = 0;
@@ -142,11 +180,13 @@ public class ItemListActivity extends WBWBaseActivity {
 
             @Override
             public void onUndo(Object item) {
-                adapter.addItem(deletedItem, deletedItemPosition);
+                if (deletedItem != null){
+                    adapter.addItem(deletedItem, deletedItemPosition);
+                }
                 deletedItem = null;
-                adapter.notifyDataSetChanged();
+                //adapter.notifyDataSetChanged();
             }
-        };
+        };*/
     }
 
     private class DataLoader {
@@ -156,7 +196,7 @@ public class ItemListActivity extends WBWBaseActivity {
 
         private void initList() {
 
-            ListView listView = (ListView) findViewById(R.id.list_item);
+            XListView listView = (XListView) findViewById(R.id.list_item);
             listView.setAdapter(adapter);
             listHandlers = new ListHandlers(listView);
             Log.d(getWBWApplication().LOG_TAG, "InitList");
@@ -174,70 +214,36 @@ public class ItemListActivity extends WBWBaseActivity {
                 public void done(List<ItemList> itemLists, ParseException e) {
                     Log.d(getWBWApplication().LOG_TAG, "Fetched list");
                     Utils.setItemList(itemLists.get(0));
-                    getCategories();
+                    getItems();
                 }
             });
         }
 
-        private void getCategories() {
-            // Get Categories
-            ParseQuery<Category> catQuery = ParseQuery.getQuery(Category.class);
-            catQuery.orderByAscending("position");
-            catQuery.setCachePolicy(ParseQuery.CachePolicy.NETWORK_ELSE_CACHE);
-            Log.d(getWBWApplication().LOG_TAG, " catQuery.hasCachedResult(): " + catQuery.hasCachedResult());
-            catQuery.findInBackground(new FindCallback<Category>() {
-                @Override
-                public void done(List<Category> categories, ParseException e) {
-                /*for (Category category : categories) {
-                    adapter.addSection(category.getTitle(),new OLDItemListAdapter(ItemListActivity.this,new ArrayList<Item>()));
-                    adapter.notifyDataSetChanged();
-                }*/
-                    Log.d(getWBWApplication().LOG_TAG, "Fetched categories");
-                    categoryList = (ArrayList<Category>) categories;
-                    getItems(categories);
-                }
-            });
-        }
+        private void getItems() {
 
-        private void getItems(final List<Category> catList) {
-
-
-            asyncNumberOfCallbacks = catList.size();
-            asyncCount = 0;
             arrItems = new ArrayList<Item>();
 
-
-            for (Category category : catList) {
-
-                ParseQuery<Item> itemQuery = ParseQuery.getQuery(Item.class);
-                itemQuery.include("category");
-                itemQuery.include("user");
-                itemQuery.whereNotEqualTo("state", Utils.PARSE_DELETED);
-                itemQuery.whereEqualTo("category", category);
-                itemQuery.setCachePolicy(ParseQuery.CachePolicy.NETWORK_ELSE_CACHE);
-                itemQuery.findInBackground(getItemsCallback);
-            }
-
-
+            ParseQuery<Item> itemQuery = ParseQuery.getQuery(Item.class);
+            itemQuery.include("user");
+            itemQuery.include("category");
+            itemQuery.whereNotEqualTo("state", Utils.PARSE_DELETED);
+            itemQuery.setCachePolicy(ParseQuery.CachePolicy.NETWORK_ELSE_CACHE);
+            itemQuery.findInBackground(getItemsCallback);
         }
 
         private FindCallback<Item> getItemsCallback = new FindCallback<Item>() {
             @Override
             public void done(List<Item> items, ParseException e) {
                 arrItems.addAll(items);
-                asyncCount++;
-                Log.d(getWBWApplication().LOG_TAG, "Fetched items category:" + asyncCount);
-                if (asyncCount == asyncNumberOfCallbacks) {
-                    doneLoadingItems();
-                }
+                doneLoadingItems();
             }
         };
 
         private void doneLoadingItems() {
-            final ListView listView = (ListView) findViewById(R.id.list_item);
+            final XListView listView = (XListView) findViewById(R.id.list_item);
             Log.d(getWBWApplication().LOG_TAG, "Fetched all items");
             findViewById(R.id.progressBar).setVisibility(View.GONE);
-            adapter = new ItemListAdapter(ItemListActivity.this, arrItems, categoryList);
+            adapter = new ItemListAdapter(getBaseContext(),R.layout.item_list, arrItems,listView);
             listView.setAdapter(adapter);
             for (Item i : arrItems) {
                 if (i.isRegistered()) {
@@ -276,30 +282,43 @@ public class ItemListActivity extends WBWBaseActivity {
 
                 }
             });
-            addItemEditText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            addItemEditText.setOnClickListener(new View.OnClickListener() {
                 @Override
-                public void onFocusChange(View v, boolean hasFocus) {
-                    addItemEditText.setCursorVisible(hasFocus);
+                public void onClick(View v) {
+                    addItemEditText.setCursorVisible(true);
                 }
             });
 
-            addItemEditText.clearFocus();
+            addItemEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+                @Override
+                public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                    if (actionId == EditorInfo.IME_ACTION_DONE) {
+                        addItemButton.callOnClick();
+                    }
+                    return false;
+                }
+            });
 
             addItemButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
 
-                    ParseQuery<Category> catQuery = ParseQuery.getQuery(Category.class);
+                    Item i = new Item(Utils.getItemList(), null, addItemEditText.getText().toString(), null, null);
+                    addItemEditText.setText("");
+                    addItemEditText.setCursorVisible(false);
+                    adapter.addItem(i);
+                    //adapter.notifyDataSetChanged();
+                    ((XListView)findViewById(R.id.list_item)).smoothScrollToPosition(0);
+
+                    /*ParseQuery<Category> catQuery = ParseQuery.getQuery(Category.class);
                     catQuery.whereEqualTo("isDefault", true);
                     catQuery.getFirstInBackground(new GetCallback<Category>() {
                         @Override
                         public void done(Category category, ParseException e) {
-                            Item i = new Item(Utils.getItemList(), category, addItemEditText.getText().toString(), null, null);
-                            addItemEditText.setText("");
-                            adapter.addItem(i);
-                            adapter.notifyDataSetChanged();
+
+
                         }
-                    });
+                    });*/
                 }
             });
         }

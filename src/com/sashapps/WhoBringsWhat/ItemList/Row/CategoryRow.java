@@ -16,7 +16,7 @@ public class CategoryRow implements IRow {
         this.inflater = inflater;
     }
 
-    public View getView(View convertView) {
+    public View getView(View convertView,int position) {
         ViewHolder holder;
         View view;
 
@@ -51,13 +51,12 @@ public class CategoryRow implements IRow {
     }
 
     @Override
-    public boolean isHidden() {
-        return false;
+    public void setEditMode(boolean isEdit){
+
     }
 
-    @Override
-    public void setHidden(boolean hidden) {
-
+    public boolean getEditMode(){
+        return false;
     }
 
 

@@ -21,9 +21,12 @@ import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.graphics.Rect;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.*;
 import android.widget.AbsListView;
 import android.widget.ListView;
+import com.sashapps.WhoBringsWhat.ItemList.ItemListAdapter;
+import com.sashapps.WhoBringsWhat.R;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -64,9 +67,9 @@ import java.util.List;
  * android.view.ViewPropertyAnimator}.</p>
  *
  * <p>For a generalized {@link android.view.View.OnTouchListener} that makes any view dismissable,
- * see {@link SwipeDismissTouchListener}.</p>
+ * see {@link com.sashapps.WhoBringsWhat.View.Utils.SwipeDismissListViewTouchListener}.</p>
  *
- * @see SwipeDismissTouchListener
+ * @see com.sashapps.WhoBringsWhat.View.Utils.SwipeDismissListViewTouchListener
  */
 public class SwipeDismissListViewTouchListener implements View.OnTouchListener {
     // Cached ViewConfiguration and system-wide constant values
@@ -257,16 +260,27 @@ public class SwipeDismissListViewTouchListener implements View.OnTouchListener {
                     final View downView = mDownView; // mDownView gets null'd before animation ends
                     final int downPosition = mDownPosition;
                     ++mDismissAnimationRefCount;
-                    mDownView.animate()
+
+                    /*mDownView.setTranslationX(0);
+                    mDownView.setAlpha(1);*/
+
+                    int[] pos = new int[1];
+                    pos[0]=downPosition;
+                    mDownView.setTranslationX(0);
+                    mDownView.setAlpha(1);
+                    mCallbacks.onDismiss(mListView, pos);
+
+                    /*mDownView.animate()
                             .translationX(dismissRight ? mViewWidth : -mViewWidth)
                             .alpha(0)
                             .setDuration(mAnimationTime)
                             .setListener(new AnimatorListenerAdapter() {
                                 @Override
                                 public void onAnimationEnd(Animator animation) {
-                                    performDismiss(downView, downPosition);
+                                    //performDismiss(downView, downPosition);
+
                                 }
-                            });
+                            });*/
                 } else {
                     // cancel
                     mDownView.animate()
@@ -336,6 +350,7 @@ public class SwipeDismissListViewTouchListener implements View.OnTouchListener {
     }
 
     private void performDismiss(final View dismissView, final int dismissPosition) {
+
         // Animate the dismissed list item to zero-height and fire the dismiss callback when
         // all dismissed list item animations have completed. This triggers layout on each animation
         // frame; in the future we may want to do something smarter and more performant.
