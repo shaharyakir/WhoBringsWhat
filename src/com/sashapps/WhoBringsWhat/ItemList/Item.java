@@ -98,6 +98,7 @@ public class Item extends ParseObject {
         else{
             remove("quantity");
         }
+        this.saveInBackground();
     }
 
     public String getTitle() {
@@ -106,6 +107,7 @@ public class Item extends ParseObject {
 
     public void setTitle(String title) {
         put("title", title);
+        saveInBackground();
     }
 
     public String getDescription() {
@@ -113,8 +115,14 @@ public class Item extends ParseObject {
     }
 
     public void setDescription(String description) {
-        if (description != null)
+        if (description != null){
             put("description", description);
+
+        }
+        else{
+            remove("description");
+        }
+        saveInBackground();
     }
 
     public void setPhoto(Bitmap b){
@@ -133,7 +141,6 @@ public class Item extends ParseObject {
         this.setDescription(description);
         this.setQuantity(quantity);
         mPhoto = Utils.getDefaultPhoto();
-        saveInBackground();
     }
 
     public Item() {

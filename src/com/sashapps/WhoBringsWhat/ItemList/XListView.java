@@ -355,11 +355,13 @@ public class XListView extends ListView {
 
     // SwipeToReveal
     private View mRevealView;
+    private int mRevealLayout;
     private boolean mIsRevealed;
     private float mMaxRevealDistance;
     private float mReveleadDistance;
     private boolean mIsRevealMode;
     private int lastPos = INVALID_POSITION;
+    private boolean mIsAnimationInProgress;
 
     /**
      * {@inheritDoc}
@@ -561,8 +563,14 @@ public class XListView extends ListView {
         return this;
     }
 
+    public XListView setRevealLayout(int revealLayoutId) {
+        mRevealLayout = revealLayoutId;
+        mIsRevealMode = true;
+        return this;
+    }
+
     public void recycle(View v) {
-        mIsRevealed = false;
+        unreveal();
         v.setTranslationX(0);
     }
 
@@ -588,11 +596,19 @@ public class XListView extends ListView {
     public void resetState(int position, final OnAnimationEndCallback callback) {
         View viewToReset = getChildAt(lastPos);
         View viewToResetSwipingLayout = null;
+        final View viewToResetRevealLayout;
+
+        mIsAnimationInProgress = true;
+
         if (viewToReset != null) {
             viewToResetSwipingLayout = viewToReset.findViewById(mSwipingLayout);
+            viewToResetRevealLayout  = viewToReset.findViewById(mRevealLayout);
+        }
+        else{
+            viewToResetRevealLayout = null;
         }
 
-        if (viewToResetSwipingLayout != null) {
+        if (viewToResetSwipingLayout != null && viewToResetRevealLayout != null) {
 
             ViewPropertyAnimator.animate(viewToResetSwipingLayout)
                     .translationX(0)
@@ -605,6 +621,8 @@ public class XListView extends ListView {
 
                         @Override
                         public void onAnimationEnd(Animator animator) {
+                            mIsAnimationInProgress = false;
+                            unreveal(viewToResetRevealLayout);
                             if (callback != null) {
                                 callback.onAnimationCallback();
                             }
@@ -621,9 +639,6 @@ public class XListView extends ListView {
                         }
                     });
         }
-
-        mIsRevealed = false;
-        mReveleadDistance = 0;
     }
 
 
@@ -692,6 +707,10 @@ public class XListView extends ListView {
                 });
     }
 
+    public void setMaxRevealDistance(int distance){
+        mMaxRevealDistance=distance;
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent ev) {
 
@@ -707,7 +726,9 @@ public class XListView extends ListView {
         // Store width of this list for usage of swipe distance detection
         if (mViewWidth < 2) {
             mViewWidth = getWidth();
-            mMaxRevealDistance = mViewWidth / 2; // TODO: Based on member value (setter/getter)
+            if (mMaxRevealDistance == 0){
+                mMaxRevealDistance = mViewWidth / 5; // TODO: Based on member value (setter/getter)
+            }
         }
 
         switch (ev.getActionMasked()) {
@@ -734,8 +755,10 @@ public class XListView extends ListView {
                             // if a specific swiping layout has been giving, use this to swipe.
                             if (mSwipingLayout > 0) {
                                 View swipingView = child.findViewById(mSwipingLayout);
+                                View revealView = child.findViewById(mRevealLayout);
                                 if (swipingView != null) {
                                     mSwipeDownView = swipingView;
+                                    mRevealView = revealView;
                                 }
                             }
 
@@ -801,11 +824,14 @@ public class XListView extends ListView {
                     dismiss = true;
                 }
                 // Reveal Condition
+                else if (Math.abs(deltaX) > mMaxRevealDistance * 0.8f && mSwiping && deltaX < 0){
+                    reveal=true;
+                }
                 else if (
                         mVelocityTracker.getXVelocity() < 0 && // Swiping left
                                 mMinFlingVelocity <= velocityX && // Velocity is in range
                                 velocityY < velocityX && // Swiping horizontal faster than vertical
-                                Math.abs(deltaX) >= mViewWidth * 0.1f && // Swiped enough length
+                                Math.abs(deltaX) >= mMaxRevealDistance * 0.3f && // Swiped enough length
                                 mReveleadDistance > 0
                         ) {
                     reveal = true;
@@ -822,14 +848,15 @@ public class XListView extends ListView {
                             .translationX(mMaxRevealDistance * -1)
                             .setDuration(mAnimationTime)
                             .setListener(null);
-                    mIsRevealed = true;
+                    reveal();
+
                 } else if (mSwiping) {
                     // Swipe back to regular position
 
-                    ViewPropertyAnimator.animate(mSwipeDownView)
+                  /*  ViewPropertyAnimator.animate(mSwipeDownView)
                             .translationX(0)
                             .setDuration(mAnimationTime)
-                            .setListener(null);
+                            .setListener(null);*/
 
                     ViewPropertyAnimator.animate(mSwipeDownChild)
                             .translationX(0)
@@ -837,8 +864,7 @@ public class XListView extends ListView {
                             .setDuration(mAnimationTime)
                             .setListener(null);
 
-                    mIsRevealed = false;
-                    mReveleadDistance = 0;
+                    resetState(lastPos,null);
                 }
                 mVelocityTracker = null;
                 mDownX = 0;
@@ -893,10 +919,7 @@ public class XListView extends ListView {
                             ViewHelper.setAlpha(mSwipeDownView, Math.max(0f, Math.min(1f,
                                     1f - 2f * Math.abs(deltaX) / mViewWidth)));
                         }*/
-
-                        if (mIsRevealed) {
-                            resetState(lastPos, null);
-                        } else if (mSwipeDownView == null || (mSwipeDownView != null && mSwipeDownView.getTranslationX() == 0)) {
+                        if (mSwipeDownView == null || (mSwipeDownView != null && mSwipeDownView.getTranslationX() == 0)) {
                             ViewHelper.setTranslationX(mSwipeDownChild, deltaX);
                             ViewHelper.setAlpha(mSwipeDownChild, Math.max(0f, Math.min(1f,
                                     1f - 2f * Math.abs(deltaX) / mViewWidth)));
@@ -906,11 +929,12 @@ public class XListView extends ListView {
                         float swipeDistance = Math.abs(deltaX);
                         mReveleadDistance = Math.min(mMaxRevealDistance, swipeDistance);
 
-                        if (mReveleadDistance == mMaxRevealDistance) {
-                            mIsRevealed = true;
-                        }
+
 
                         if (!mIsRevealed) {
+                            if (mRevealView != null){
+                                mRevealView.setVisibility(VISIBLE);
+                            }
                             ViewHelper.setTranslationX(mSwipeDownView, mReveleadDistance * -1);
                         }
                     }
@@ -1109,6 +1133,33 @@ public class XListView extends ListView {
 		 */
         if (visibility != View.VISIBLE) {
             discardUndo();
+        }
+    }
+
+    public boolean isRevealed(){
+        return mIsRevealed;
+    }
+
+    private void reveal(){
+        if (mRevealView != null){
+            mRevealView.setVisibility(View.VISIBLE);
+        }
+        mReveleadDistance=mMaxRevealDistance;
+        mIsRevealed=true;
+    }
+
+    private void unreveal(){
+        unreveal(mRevealView);
+    }
+
+    private void unreveal(View revealView){
+        if (revealView != null){
+            revealView.setVisibility(View.INVISIBLE);
+        }
+
+        if (!mIsAnimationInProgress){
+            mIsRevealed=false;
+            mReveleadDistance=0;
         }
     }
 }

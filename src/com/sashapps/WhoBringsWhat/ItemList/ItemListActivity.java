@@ -46,6 +46,7 @@ public class ItemListActivity extends WBWBaseActivity {
     DataLoader dataLoader;
     AddItemListeners addItemListeners;
     ArrayList<Item> arrItems;
+    Item mLastItemAdded;
 
 
     public void onCreate(Bundle savedInstanceState) {
@@ -63,6 +64,21 @@ public class ItemListActivity extends WBWBaseActivity {
 
         ParseAnalytics.trackAppOpened(getIntent());
 
+        findViewById(R.id.filter_unregistered_items_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                adapter.removeRegisteredItems();
+            }
+        });
+
+        findViewById(R.id.filter_all_items_button).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //adapter.removeAll();
+                //adapter.addAll();
+            }
+        });
+
         login();
     }
 
@@ -78,8 +94,8 @@ public class ItemListActivity extends WBWBaseActivity {
             this.lv = lv;
             deletedItem = null;
             deletedItemPosition = 0;
-            //lv.setOnItemClickListener(onItemClickListener);
-            //lv.setOnItemLongClickListener(onItemLongClickListener);
+            lv.setOnItemClickListener(onItemClickListener);
+            lv.setOnItemLongClickListener(onItemLongClickListener);
 
             lv.setDismissCallback(new XListView.OnDismissCallback() {
                 @Override
@@ -94,44 +110,29 @@ public class ItemListActivity extends WBWBaseActivity {
                     return new XListView.Undoable() {
                         @Override
                         public void undo() {
-                            adapter.addItem(item, pos);
+                            adapter.addItem(item);
                             adapter.notifyDataSetChanged();
+                        }
+
+                        @Override
+                        public void discard(){
+                            item.deleteItem();
                         }
                     };
                 }
+
+
             });
 
             lv.enableSwipeToDismiss();
-            lv.setUndoStyle(XListView.UndoStyle.COLLAPSED_POPUP);
+            lv.setUndoStyle(XListView.UndoStyle.SINGLE_POPUP);
+            lv.setUndoHideDelay(2000);
+            lv.setMaxRevealDistance((int)getResources().getDimension(R.dimen.edit_button_width));
+            lv.setRequireTouchBeforeDismiss(false);
             lv.setSwipingLayout(R.id.list_item_front);
+            lv.setRevealLayout(R.id.list_item_back);
+            lv.setChoiceMode(AbsListView.CHOICE_MODE_SINGLE);
 
-          /*  dismissCallbacks = new SwipeDismissListViewTouchListener.DismissCallbacks() {
-                @Override
-                public boolean canDismiss(int position) {
-                    return adapter.getItemViewType(position) == RowType.ITEM.ordinal();
-                }
-
-                @Override
-                public void onDismiss(ListView listView, int[] reverseSortedPositions) {
-                    for (int position : reverseSortedPositions) {
-                        Log.d(LOG_TAG, String.valueOf(position));
-                        if (deletedItem != null) {
-                            deletedItem.deleteItem();
-                        }
-                        deletedItem = ((Item) adapter.getListItem(position));
-                        deletedItemPosition = position;
-                        adapter.remove(position);
-                    }
-
-                    new UndoBar.Builder(ItemListActivity.this)
-                            .setMessage("Deleted '" + deletedItem.getTitle() + "'")
-                            .setListener(undoListener)
-                            .show();
-                }
-            };
-            swipeDismissListViewTouchListener = new SwipeDismissListViewTouchListener(lv, dismissCallbacks);
-            lv.setOnTouchListener(swipeDismissListViewTouchListener);
-            lv.setOnScrollListener(swipeDismissListViewTouchListener.makeScrollListener()); // Setting this scroll listener is required to ensure that during ListView scrolling, we don't look for swipes.*/
         }
 
 
@@ -141,14 +142,16 @@ public class ItemListActivity extends WBWBaseActivity {
                 if (parent.getAdapter().getItemViewType(position) == RowType.ITEM.ordinal()) {
                     Item i = (Item) adapter.getListItem(position);
 
-                    if (!i.isRegistered()) {
+                    if (!i.isRegistered() && ! lv.isRevealed()) {
                         i.register();
+                        adapter.notifyDataSetChanged();
                     } else {
                         if (i.isCurrentUserOwnerOfItem()) {
                             i.unregister();
+                            adapter.notifyDataSetChanged();
                         }
                     }
-                    adapter.notifyDataSetChanged();
+
                 }
             }
         };
@@ -167,26 +170,6 @@ public class ItemListActivity extends WBWBaseActivity {
             }
         };
 
-
-      /*  final UndoBar.Listener undoListener = new UndoBar.Listener() {
-            @Override
-            public void onHide(Object item) {
-                if (deletedItem != null) {
-                    deletedItem.deleteItem();
-                    deletedItem = null;
-                    deletedItemPosition = 0;
-                }
-            }
-
-            @Override
-            public void onUndo(Object item) {
-                if (deletedItem != null){
-                    adapter.addItem(deletedItem, deletedItemPosition);
-                }
-                deletedItem = null;
-                //adapter.notifyDataSetChanged();
-            }
-        };*/
     }
 
     private class DataLoader {
@@ -245,11 +228,17 @@ public class ItemListActivity extends WBWBaseActivity {
             findViewById(R.id.progressBar).setVisibility(View.GONE);
             adapter = new ItemListAdapter(getBaseContext(),R.layout.item_list, arrItems,listView);
             listView.setAdapter(adapter);
+
+            Utils.addCategory("(None)");
+
             for (Item i : arrItems) {
                 if (i.isRegistered()) {
                     new loadItemUserPhoto().execute(i);
                 }
+                Utils.addCategory(i.getCategory());
             }
+
+            Utils.addCategory("(New Category)");
         }
 
     }
@@ -304,21 +293,22 @@ public class ItemListActivity extends WBWBaseActivity {
                 public void onClick(View v) {
 
                     Item i = new Item(Utils.getItemList(), null, addItemEditText.getText().toString(), null, null);
+                    i.setIsEdit(true);
                     addItemEditText.setText("");
                     addItemEditText.setCursorVisible(false);
-                    adapter.addItem(i);
-                    //adapter.notifyDataSetChanged();
-                    ((XListView)findViewById(R.id.list_item)).smoothScrollToPosition(0);
 
-                    /*ParseQuery<Category> catQuery = ParseQuery.getQuery(Category.class);
-                    catQuery.whereEqualTo("isDefault", true);
-                    catQuery.getFirstInBackground(new GetCallback<Category>() {
-                        @Override
-                        public void done(Category category, ParseException e) {
-
-
+                    if (mLastItemAdded != null){
+                        if (mLastItemAdded.isEdit()){
+                            mLastItemAdded.setIsEdit(false);
                         }
-                    });*/
+                        i.setCategory(mLastItemAdded.getCategory());
+                    }
+
+                    mLastItemAdded = i;
+
+                    int pos = adapter.addItem(i);
+                    //adapter.notifyDataSetChanged();
+                    ((XListView)findViewById(R.id.list_item)).setSelection(Math.max(0, pos - 1));
                 }
             });
         }

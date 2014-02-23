@@ -3,6 +3,7 @@ package com.sashapps.WhoBringsWhat.ItemList.Row;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
 import android.widget.TextView;
 import com.sashapps.WhoBringsWhat.ItemList.Category;
 import com.sashapps.WhoBringsWhat.R;
@@ -23,7 +24,7 @@ public class CategoryRow implements IRow {
         if (convertView == null) {
             ViewGroup viewGroup = (ViewGroup) inflater.inflate(R.layout.header, null);
 
-            holder = new ViewHolder((TextView) viewGroup.findViewById(R.id.list_header_title));
+            holder = new ViewHolder((EditText) viewGroup.findViewById(R.id.list_header_title));
             viewGroup.setTag(holder);
 
             view = viewGroup;
@@ -62,9 +63,9 @@ public class CategoryRow implements IRow {
 
     private static class ViewHolder {
 
-        final TextView title;
+        final EditText title;
 
-        private ViewHolder(TextView title) {
+        private ViewHolder(EditText title) {
             this.title = title;
         }
     }

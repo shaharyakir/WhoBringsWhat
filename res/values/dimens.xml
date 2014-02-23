@@ -7,5 +7,6 @@
     <!-- The touch slop you need to cause a swipe instead of a scroll -->
     <dimen name="elv_touch_slop">16dp</dimen>
 
-    <dimen name="list_item_min_height">48dp</dimen>
+    <dimen name="list_item_min_height">64dp</dimen>
+    <dimen name="edit_button_width">64dp</dimen>
 </resources>
