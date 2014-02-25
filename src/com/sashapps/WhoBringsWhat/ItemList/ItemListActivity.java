@@ -79,6 +79,8 @@ public class ItemListActivity extends WBWBaseActivity {
             }
         });
 
+        
+
         login();
     }
 
